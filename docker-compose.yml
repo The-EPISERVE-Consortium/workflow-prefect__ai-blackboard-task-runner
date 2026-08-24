@@ -1,0 +1,27 @@
+services:
+  pi-agent:
+    build: .
+    image: pi-agent
+    stdin_open: true
+    tty: true
+    environment:
+      # Self-hosted Ollama (native /api/chat, via the vendored provider
+      # extension). Use with `pi --provider ollama --model <id>`.
+      OLLAMA_HOST: ${OLLAMA_HOST:-}
+      OLLAMA_API_BASE: ${OLLAMA_API_BASE:-}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+      # OpenRouter (built into pi, no extra config needed beyond the key).
+      # Use with `pi --provider openrouter --model <id>`.
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # Legacy: generic OpenAI-/Anthropic-compatible custom provider.
+      # Use with `pi --provider custom --model <id>`.
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_API_TYPE: ${LLM_API_TYPE:-openai-completions}
+      LLM_PROVIDER_NAME: ${LLM_PROVIDER_NAME:-custom}
+      LLM_NUM_CTX: ${LLM_NUM_CTX:-}
+    volumes:
+      - .:/workspace
+      - ./output:/output
+    working_dir: /workspace

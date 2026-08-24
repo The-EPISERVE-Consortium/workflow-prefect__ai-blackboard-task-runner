@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pi Trace · {session_name}</title>
+<style>{css}</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="topbar-icon">⚡</span>
+  <span class="topbar-title">Trace · pi-agent:</span>
+  <span class="topbar-id" id="copy-id" title="Click to copy">{session_name}</span>
+  <div class="topbar-meta">
+    <span><b>{interaction_count}</b> interactions</span>
+    <span><b>{step_count}</b> llm-generations</span>
+    <span><b>{tool_count}</b> tool calls</span>
+    <span><b>{total_cost}</b> total cost</span>
+    <span><b>{total_dur}</b> total time</span>
+  </div>
+</div>
+<div class="main">
+  <div class="tree-pane">
+    <div class="tree-search"><input type="text" id="tree-search" placeholder="Search nodes (name / tool / prompt)" /></div>
+    <div class="tree-toolbar">
+      <button id="expand-all">▼ Expand all</button>
+      <button id="collapse-all">▶ Collapse all</button>
+      <button id="only-errors">❌ Errors only</button>
+    </div>
+    <div class="tree-list" id="tree-list"></div>
+    <div class="dag-pane">
+      <div class="dag-title">Node stats (ok / total)</div>
+      <div class="dag-grid" id="dag-grid"></div>
+    </div>
+  </div>
+  <div class="detail-pane" id="detail-pane">
+    <div class="detail-empty">Select a node on the left to see details</div>
+  </div>
+</div>
+<script>{js}</script>
+</body>
+</html>

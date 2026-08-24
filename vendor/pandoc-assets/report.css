@@ -1,0 +1,108 @@
+/* Report styling for pandoc + weasyprint.
+   Usage: pandoc report.md -s --pdf-engine=weasyprint --css=/opt/pandoc-assets/report.css -o report.pdf
+   Requires weasyprint specifically -- wkhtmltopdf does not support the
+   CSS Paged Media rules (@page margin boxes, string-set) used below for
+   the running header and page-number chip. */
+
+@page {
+  size: A4;
+  margin: 1.1cm 2.2cm 2.2cm 2.2cm;
+
+  /* The chip lives in @top-left. Everything else -- the rule and the
+     running title -- lives in ONE box, @top-right, given an explicit wide
+     width. @top-center's width defaults to its own (empty) content's
+     shrink-to-fit size in weasyprint, not the remaining space, so relying
+     on it left a gap; folding the rule into @top-right's border-bottom
+     avoids that. No border on @top-left-corner -- nothing should render
+     to the left of the chip. */
+  @top-left-corner {
+    content: "";
+  }
+  @top-left {
+    content: counter(page);
+    background: #f5c518;
+    color: #1a1a1a;
+    font-weight: 700;
+    font-family: "Lato", "Helvetica Neue", Arial, sans-serif;
+    padding: 0.25em 0.6em 0.25em 0.9em;
+    vertical-align: bottom;
+  }
+  @top-right {
+    content: string(doctitle);
+    font-family: "Lato", "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.85em;
+    color: #444;
+    text-align: right;
+    vertical-align: bottom;
+    width: 15cm;
+    border-bottom: 2px solid #f5c518;
+    padding-bottom: 0.4em;
+  }
+  @top-right-corner {
+    content: "";
+    border-bottom: 2px solid #f5c518;
+  }
+}
+
+html {
+  font-family: "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-size: 11pt;
+  color: #1a1a1a;
+}
+
+body {
+  text-align: justify;
+}
+
+header#title-block-header {
+  text-align: left;
+  margin-bottom: 1.5em;
+}
+
+h1.title {
+  string-set: doctitle content();
+  font-size: 2.1em;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 0.4em 0;
+}
+
+p.subtitle {
+  font-size: 1.1em;
+  font-weight: 400;
+  color: #444;
+  margin: 0 0 1em 0;
+}
+
+h2, h3 {
+  font-family: "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+  break-after: avoid;
+}
+
+p {
+  margin: 0 0 0.9em 0;
+  orphans: 3;
+  widows: 3;
+}
+
+/* first paragraph after the title block reads as a bold lede, like the example */
+header#title-block-header + p {
+  font-weight: 700;
+}
+
+code, pre {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border-bottom: 1px solid #ddd;
+  padding: 0.4em 0.6em;
+  text-align: left;
+}

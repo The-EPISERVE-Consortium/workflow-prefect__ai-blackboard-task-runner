@@ -1,0 +1,36 @@
+{
+  "name": "pi-ollama-provider",
+  "version": "2.0.0",
+  "description": "Ollama provider for pi — native /api/chat streaming, tool calling fix, auto-discovery, cloud support, context safety",
+  "keywords": [
+    "pi-package"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "main": "extensions/pi-ollama-provider/index.ts",
+  "pi": {
+    "extensions": [
+      "./extensions/pi-ollama-provider/index.ts"
+    ],
+    "skills": [],
+    "prompts": [],
+    "themes": []
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "@sinclair/typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.84.0",
+    "@earendil-works/pi-coding-agent": "^0.84.0",
+    "@earendil-works/pi-tui": "^0.84.0",
+    "@sinclair/typebox": "^0.34.33",
+    "vitest": "^4.1.5"
+  }
+}
