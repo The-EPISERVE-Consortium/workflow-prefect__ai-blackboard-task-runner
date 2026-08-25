@@ -25,6 +25,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # friction of forcing every `pip install` through a venv first.
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 
+# Lets this same image also serve as the Prefect flow-run container
+# (flow/report_flow.py, deploy.py) -- no separate image/repo for that, see
+# Appendix G in the harness notes. Local/interactive users pay nothing for
+# this beyond a few unused pip packages.
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
+
 # Report styling for weasyprint-rendered PDFs (running header, page-number
 # chip, two-column body) -- see vendor/pandoc-assets/report.css.
 COPY vendor/pandoc-assets /opt/pandoc-assets

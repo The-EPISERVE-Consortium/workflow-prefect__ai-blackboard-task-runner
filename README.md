@@ -1,12 +1,16 @@
-# pi-llm-server
+# workflow-prefect__run-ai-task
 
 Docker harness for the [pi coding agent](https://pi.dev) that runs a single
-prompt headlessly against an LLM provider and collects the resulting files.
+prompt headlessly against an LLM provider and collects the resulting files,
+plus (not yet built) the Prefect flow that triggers it as a one-shot
+Kubernetes Job per request.
 
 The idea: give it a one-off task ("clone this repo, analyse it, write a PDF
 report") and it runs unattended in a disposable container — no interactive
-session, no manual babysitting. Meant to eventually run as a one-shot
-Kubernetes Job, triggered per-request by a Prefect flow.
+session, no manual babysitting. The Prefect flow lives in this same repo
+rather than a separate one (`flow/report_flow.py`, not yet built): it just
+shells out to `pi-report.sh` inside this same image, so there's nothing
+external to orchestrate.
 
 ## Build
 
