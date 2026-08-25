@@ -31,6 +31,23 @@ analysis this is (e.g. "Generated static analysis"), and the date.
 (rough line count, main components), and a one-paragraph preview of the
 biggest risks -- pitched at someone who won't read past this section.
 
+### Potential Bug Analysis
+A table, one row per suspected bug, ordered High → Medium → Low:
+
+| Priority | Potential Bug | Evidence | Expected Failure Mode | Suggested Fix |
+|---|---|---|---|---|
+
+### Vulnerability Analysis
+A table, one row per finding, ordered High → Medium → Low:
+
+| Severity | Finding | Evidence | Impact | Recommendation |
+|---|---|---|---|---|
+
+"Evidence" must cite actual code (file/function/line-level detail), not a
+generic claim. Skip this section entirely (don't pad it) if the codebase is
+too trivial to have any findings -- say so in one sentence instead of a
+table with invented rows.
+
 ### Overall Logic
 Walk the main execution path step by step (numbered list), naming the actual
 entrypoint file/function. Follow with a table:
@@ -49,23 +66,6 @@ lists. Only include files that were actually opened and read.
 Bullet list: test coverage, documentation drift (does the README match the
 code?), typing/structure quality, anything that would slow down a future
 contributor.
-
-### Vulnerability Analysis
-A table, one row per finding, ordered High → Medium → Low:
-
-| Severity | Finding | Evidence | Impact | Recommendation |
-|---|---|---|---|---|
-
-"Evidence" must cite actual code (file/function/line-level detail), not a
-generic claim. Skip this section entirely (don't pad it) if the codebase is
-too trivial to have any findings -- say so in one sentence instead of a
-table with invented rows.
-
-### Potential Bug Analysis
-A table, one row per suspected bug, ordered P1 → P2 → P3:
-
-| Priority | Potential Bug | Evidence | Expected Failure Mode | Suggested Fix |
-|---|---|---|---|---|
 
 ### Remediation Roadmap
 A short numbered list (5-8 items) ordering the fixes above by what should

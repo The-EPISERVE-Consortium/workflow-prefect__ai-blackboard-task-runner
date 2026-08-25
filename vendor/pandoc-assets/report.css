@@ -48,6 +48,7 @@ html {
   font-family: "Lato", "Helvetica Neue", Arial, sans-serif;
   font-size: 11pt;
   color: #1a1a1a;
+  line-height: 1.45;
 }
 
 body {
@@ -76,8 +77,22 @@ p.subtitle {
 
 h2, h3 {
   font-family: "Lato", "Helvetica Neue", Arial, sans-serif;
-  font-weight: 700;
+  font-weight: 600;
   break-after: avoid;
+}
+
+h2 {
+  margin-top: 1.6em;
+  padding-top: 0.9em;
+}
+
+h2::before {
+  content: "";
+  display: block;
+  width: 2.4cm;
+  height: 3px;
+  background: #f5c518;
+  margin-bottom: 0.7em;
 }
 
 p {
@@ -99,10 +114,13 @@ code, pre {
 table {
   border-collapse: collapse;
   width: 100%;
+  table-layout: fixed;
+  font-size: 0.9em;
 }
 
 th, td {
   border-bottom: 1px solid #ddd;
   padding: 0.4em 0.6em;
   text-align: left;
+  overflow-wrap: break-word;
 }

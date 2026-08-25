@@ -14,7 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         file \
         xxd \
         fonts-lato \
-    && rm -rf /var/lib/apt/lists/*
+        ripgrep \
+        fd-find \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/bin/fdfind /usr/local/bin/fd
 
 # Debian's pip refuses bare installs outside a venv (PEP 668) by default.
 # The container is fully disposable (/workspace isn't persisted, see

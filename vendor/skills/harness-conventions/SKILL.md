@@ -82,8 +82,26 @@ must not be combined with `--css=/opt/pandoc-assets/report.css`.
 directly (no venv, no `--break-system-packages` needed -- the container is
 fully disposable). Don't waste steps checking whether pip exists or trying
 to bootstrap it (`ensurepip`, `apt-get install python3-pip`) -- it's already
-there. If a repo needs packages to run its tests, just `pip install` them
-from its `requirements.txt`/`pyproject.toml` and proceed.
+there.
+
+But install only what the tests actually need, not the full runtime
+dependency set. A single `pip install -r requirements.txt` can pull in a
+massive, unused stack (e.g. torch + CUDA binaries, often multiple GB) just
+to run a mocked test suite.
+
+1. First check for a dedicated test/dev requirements file
+   (`requirements-test.txt`, `requirements-dev.txt`) or a `[test]`/`[dev]`
+   extra in `pyproject.toml`. If one exists, install from it directly and
+   proceed -- no further reasoning needed.
+2. Only if no such file exists, fall back to `requirements.txt`, but first
+   scan the code (`rg "import (torch|cuda)" src tests`) for whether a heavy
+   package is actually imported in the paths the tests exercise. If it's
+   only imported inside a `try`/`except ImportError` block or mocked out in
+   the fixture, skip installing it and install the rest.
+
+A lightweight check-up is cheap; a multi-gigabyte install of unused
+CUDA/torch libraries is not, and it repeats on every run. Prefer the
+smallest dependency set that still lets the suite pass.
 
 ## Writing across mount boundaries
 
