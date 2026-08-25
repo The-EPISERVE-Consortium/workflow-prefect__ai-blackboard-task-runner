@@ -15,6 +15,8 @@ import subprocess
 from prefect import flow
 from prefect.logging import get_run_logger
 
+from pretty import PrettyFormatter
+
 
 @flow
 def agent_task_pipeline(prompt: str, provider: str = "zib", model: str = "zib/konrad-1") -> None:
@@ -30,19 +32,24 @@ def agent_task_pipeline(prompt: str, provider: str = "zib", model: str = "zib/ko
             (e.g. a requested delivery step failed).
     """
     logger = get_run_logger()
-    # Piped and logged explicitly rather than left to inherit the
-    # container's stdout/stderr: inherited output still reaches
-    # `kubectl logs`/the K8s API regardless, but isn't guaranteed to show up
-    # in Prefect's own UI log viewer, which is driven by `logging` via
-    # get_run_logger(). This guarantees any report.md block (printed by
-    # pi-agent-task.sh between ===OUTPUT_MD_BEGIN===/===OUTPUT_MD_END===
-    # markers, when the task produced one) is visible directly in the
-    # Prefect UI.
-    result = subprocess.run(
+    # Streamed line-by-line through PrettyFormatter (the same formatting
+    # run-prompt.sh uses for local console output, refactored into a class
+    # for reuse) rather than buffered and logged as one block at the end --
+    # so progress shows up in the Prefect UI's log view as it happens, not
+    # only once the whole run (potentially several minutes) has finished.
+    formatter = PrettyFormatter()
+    process = subprocess.Popen(
         ["pi-agent-task.sh", provider, model, prompt],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        bufsize=1,
     )
-    logger.info(result.stdout)
-    result.check_returncode()
+    for line in process.stdout:
+        formatted = formatter.feed(line)
+        if formatted is not None:
+            logger.info(formatted)
+
+    returncode = process.wait()
+    if returncode != 0:
+        raise subprocess.CalledProcessError(returncode, process.args)
