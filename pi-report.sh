@@ -33,6 +33,8 @@ $(cat /opt/skills/code-analysis-report/SKILL.md)
 
 $(cat /opt/skills/discord-report-delivery/SKILL.md)
 
+$(cat /opt/skills/scratch-url-upload/SKILL.md)
+
 ---
 
 Always write the report to both ${OUTPUT_DIR}/report.pdf and ${OUTPUT_DIR}/report.md (the PDF per the report template above, report.md as its untouched Markdown source) -- both files are required, not just one.
@@ -41,7 +43,7 @@ $PROMPT"
 
 pi --provider "$PROVIDER" --model "$MODEL" \
    --skill /opt/skills/harness-conventions --skill /opt/skills/code-analysis-report \
-   --skill /opt/skills/discord-report-delivery \
+   --skill /opt/skills/discord-report-delivery --skill /opt/skills/scratch-url-upload \
    --mode json -p "$FULL_PROMPT"
 
 python3 /opt/pi-trace-extension/extensions/trace/trace_to_html.py >&2 || true
