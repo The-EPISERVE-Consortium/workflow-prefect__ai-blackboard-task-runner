@@ -85,38 +85,27 @@ esac
 
 echo "=== running with provider='$LLM_PROVIDER' model='$MODEL' ==="
 
-# Both skills (harness-conventions, code-analysis-report) are force-loaded
-# every run by concatenating their full SKILL.md content directly into the
-# prompt -- not via pi's /skill:name command, which only parses one name per
-# message and would leave a second skill to the model's own (unreliable)
-# on-demand discovery. --skill flags are also passed so they're registered
-# as proper skills too (harmless, mainly for /model-style introspection).
+# Pass DISCORD_WEBHOOK_URL through if set, so local runs can exercise the
+# same delivery path the eventual K8s Job uses. Unset it and pi-report.sh
+# just skips that step.
+if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
+  ENV_ARGS+=(-e DISCORD_WEBHOOK_URL="$DISCORD_WEBHOOK_URL")
+fi
+
+# pi-report.sh (baked into the image at /usr/local/bin/pi-report.sh) is the
+# single place that runs pi, concatenates both skills into the prompt, writes
+# trace.html, and delivers the result (report.pdf -> Discord webhook,
+# report.md -> stdout between markers). It's shared with the eventual K8s
+# Job's container command, so local runs here exercise the exact same code
+# path as the deployed version -- not a separate inline copy of the logic.
 #
-# $0 inside stays literal here (escaped) -- it's filled in by the "$PROMPT"
-# arg passed to `bash -c "$INNER_SCRIPT" "$PROMPT"` below, which is how the
-# prompt text reaches -p without needing to embed/escape it in this string.
-# No --no-session: pi-trace-extension only writes events.jsonl for a real
-# session, so the run is intentionally session-backed (ephemeral either way
-# since the container is --rm'd after).
-INNER_SCRIPT="FULL_PROMPT=\"\$(cat /opt/skills/harness-conventions/SKILL.md)
-
-\$(cat /opt/skills/code-analysis-report/SKILL.md)
-
----
-
-\$0\"
-pi --provider '$LLM_PROVIDER' --model '$MODEL' --skill /opt/skills/harness-conventions --skill /opt/skills/code-analysis-report --mode json -p \"\$FULL_PROMPT\"
-python3 /opt/pi-trace-extension/extensions/trace/trace_to_html.py >&2 || true
-HTML=\$(ls -t /root/.pi/agent/traces/*/trace.html 2>/dev/null | head -1)
-[ -n \"\$HTML\" ] && cp \"\$HTML\" /output/trace.html"
-
 # Full raw JSONL always goes to run.jsonl regardless of console formatting.
 # pretty.py merges streaming deltas into one readable line per block for the
 # console; set RAW=1 to see the unfiltered event stream instead.
 docker run --rm \
   "${ENV_ARGS[@]}" \
   -v "$OUTPUT_ABS":/output \
-  pi-agent bash -c "$INNER_SCRIPT" "$PROMPT" \
+  pi-agent pi-report.sh "$LLM_PROVIDER" "$MODEL" "$PROMPT" \
   | tee "$OUTPUT_DIR/run.jsonl" \
   | if [ -n "${RAW:-}" ]; then cat; else python3 "$SCRIPT_DIR/pretty.py"; fi
 

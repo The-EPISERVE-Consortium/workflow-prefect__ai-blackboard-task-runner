@@ -46,15 +46,20 @@ COPY vendor/pi-ollama-provider /opt/pi-ollama-provider
 COPY vendor/pi-trace-extension /opt/pi-trace-extension
 
 # Skills encoding operational conventions (verify claimed outputs, pandoc's
-# PDF engine flag, don't guess paths/fabricate content) and the code-analysis
-# report structure. Both are always force-loaded by run-prompt.sh (their full
-# content is concatenated directly into the prompt, not left to pi's on-demand
-# skill discovery, which the model doesn't reliably trigger on its own).
+# PDF engine flag, don't guess paths/fabricate content), the code-analysis
+# report structure, and Discord delivery (the model itself decides whether/how
+# to post the deliverable, based on whether DISCORD_WEBHOOK_URL is set -- not
+# hardcoded in pi-report.sh). All three are always force-loaded by
+# pi-report.sh (their full content is concatenated directly into the prompt,
+# not left to pi's on-demand skill discovery, which the model doesn't
+# reliably trigger on its own).
 COPY vendor/skills/harness-conventions /opt/skills/harness-conventions
 COPY vendor/skills/code-analysis-report /opt/skills/code-analysis-report
+COPY vendor/skills/discord-report-delivery /opt/skills/discord-report-delivery
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY pi-report.sh /usr/local/bin/pi-report.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/pi-report.sh
 
 WORKDIR /workspace
 
