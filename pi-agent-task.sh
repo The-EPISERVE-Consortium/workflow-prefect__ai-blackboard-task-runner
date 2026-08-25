@@ -40,10 +40,19 @@ $(cat /opt/skills/scratch-url-upload/SKILL.md)
 
 $PROMPT"
 
+# stdin explicitly closed: -p/--print is documented as non-interactive
+# ("process prompt and exit"), so pi should never need stdin -- but nothing
+# upstream of this script (subprocess.Popen in the Prefect flow, this
+# script itself) redirects it, so it inherits whatever fd the K8s/Prefect
+# exec chain leaves connected. If that's an open, never-written, never-closed
+# pipe (observed under the Prefect Kubernetes worker, unlike a plain local
+# `docker run`), and pi reads stdin for any reason despite -p, it hangs
+# forever waiting for input/EOF that never arrives -- with no network
+# activity and no error, indistinguishable from progress from the outside.
 pi --provider "$PROVIDER" --model "$MODEL" \
    --skill /opt/skills/harness-conventions --skill /opt/skills/code-analysis-report \
    --skill /opt/skills/discord-delivery --skill /opt/skills/scratch-url-upload \
-   --mode json -p "$FULL_PROMPT"
+   --mode json -p "$FULL_PROMPT" < /dev/null
 
 python3 /opt/pi-trace-extension/extensions/trace/trace_to_html.py >&2 || true
 HTML=$(ls -t /root/.pi/agent/traces/*/trace.html 2>/dev/null | head -1)
