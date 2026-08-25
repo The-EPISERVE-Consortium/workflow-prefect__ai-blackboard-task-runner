@@ -1,5 +1,5 @@
 ---
-name: discord-report-delivery
+name: discord-delivery
 description: Use only when the prompt explicitly asks to send/post/deliver something to Discord -- a file, or a plain message such as a link (or similar wording naming Discord specifically). Not triggered just because DISCORD_WEBHOOK_URL happens to be set -- that env var being present does not by itself mean this run should post anything.
 ---
 
@@ -22,25 +22,24 @@ If the prompt does ask for Discord delivery:
 2. Two things can be sent, depending on what the prompt asks for -- use
    whichever applies, or both if asked for both:
 
-   **A file** (e.g. "post the report to Discord"): once you have finished
-   producing and verifying the deliverable (per harness-conventions -- never
-   deliver a file you haven't confirmed exists and looks right), post it
-   with a `content` field giving a one-to-two-sentence, human-readable
-   explanation of what the file is -- never post a bare attachment with no
-   context:
+   **A file** (e.g. "post the report to Discord", "send the output to
+   Discord"): once you have finished producing and verifying the deliverable
+   (per harness-conventions -- never deliver a file you haven't confirmed
+   exists and looks right), post it with a `content` field giving a
+   one-to-two-sentence, human-readable explanation of what the file is --
+   never post a bare attachment with no context:
 
    ```bash
    curl -sS -f \
-     -F "content=Code analysis report for <repo-name>: <one-line summary of what was found, e.g. severity/count of the top findings>." \
-     -F "file1=@/output/report.pdf" \
+     -F "content=<what this file is and the gist of the result, e.g. 'Code analysis report for <repo-name>: 3 medium-severity findings, no high-severity bugs.'>" \
+     -F "file1=@/output/<the file>" \
      "$DISCORD_WEBHOOK_URL"
    ```
 
-   The `content` text should be specific to this run -- name the repo/subject
-   and the gist of the result (e.g. "3 medium-severity findings, no
-   high-severity bugs"), not a generic placeholder like "Here is the report."
-   Post the file the task actually asked for -- not every intermediate file
-   sitting in `/output`.
+   The `content` text should be specific to this run -- name the subject and
+   the gist of the result, not a generic placeholder like "Here is the
+   file." Post the file the task actually asked for -- not every
+   intermediate file sitting in `/output`.
 
    **A plain message with no file** (e.g. "send the URL to Discord" after a
    scratch upload): post `content` alone, no file field, still with enough
@@ -49,7 +48,7 @@ If the prompt does ask for Discord delivery:
 
    ```bash
    curl -sS -f \
-     -F "content=Report for <repo-name> (markdown source): <the URL>" \
+     -F "content=<what this is, e.g. 'Scratch link to the report.md for <repo-name>:'> <the URL>" \
      "$DISCORD_WEBHOOK_URL"
    ```
 3. Verify the `curl` call actually succeeded (its exit code, and that it

@@ -26,9 +26,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 
 # Lets this same image also serve as the Prefect flow-run container
-# (flow/report_flow.py, deploy.py) -- no separate image/repo for that, see
-# Appendix G in the harness notes. Local/interactive users pay nothing for
-# this beyond a few unused pip packages.
+# (flow/agent_task_flow.py, deploy.py) -- no separate image/repo for that,
+# see Appendix G in the harness notes. Local/interactive users pay nothing
+# for this beyond a few unused pip packages.
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
@@ -54,20 +54,21 @@ COPY vendor/pi-trace-extension /opt/pi-trace-extension
 
 # Skills encoding operational conventions (verify claimed outputs, pandoc's
 # PDF engine flag, don't guess paths/fabricate content), the code-analysis
-# report structure, Discord delivery, and scratch-URL upload. The latter two
-# are entirely the model's own decision -- driven by whether the prompt
-# explicitly asks for them, not by which env vars happen to be set. All four
-# are always force-loaded by pi-report.sh (their full content is concatenated
+# report structure (one supported task among others, not the only one),
+# Discord delivery, and scratch-URL upload. The latter two are entirely the
+# model's own decision -- driven by whether the prompt explicitly asks for
+# them, not by which env vars happen to be set. All four are always
+# force-loaded by pi-agent-task.sh (their full content is concatenated
 # directly into the prompt, not left to pi's on-demand skill discovery, which
 # the model doesn't reliably trigger on its own).
 COPY vendor/skills/harness-conventions /opt/skills/harness-conventions
 COPY vendor/skills/code-analysis-report /opt/skills/code-analysis-report
-COPY vendor/skills/discord-report-delivery /opt/skills/discord-report-delivery
+COPY vendor/skills/discord-delivery /opt/skills/discord-delivery
 COPY vendor/skills/scratch-url-upload /opt/skills/scratch-url-upload
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY pi-report.sh /usr/local/bin/pi-report.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/pi-report.sh
+COPY pi-agent-task.sh /usr/local/bin/pi-agent-task.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/pi-agent-task.sh
 
 WORKDIR /workspace
 

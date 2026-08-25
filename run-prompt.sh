@@ -46,36 +46,33 @@ LLM_PROVIDER="${LLM_PROVIDER:?Set LLM_PROVIDER to 'ollama', 'openrouter', or 'zi
 mkdir -p "$OUTPUT_DIR"
 OUTPUT_ABS="$(realpath "$OUTPUT_DIR")"
 
+# Provider shorthand (LLM_PROVIDER=zib -> LLM_BASE_URL=https://tllm.science-berlin.de
+# etc.) is expanded by entrypoint.sh itself now, not here -- this only picks
+# the MODEL default/override and does an early fail-fast check so a missing
+# key is caught before spinning up a container, not after. entrypoint.sh
+# re-validates the same env vars regardless (it has to, for the K8s/Prefect
+# path that bypasses this script entirely), so the checks here are a faster
+# local UX, not the source of truth.
 case "$LLM_PROVIDER" in
   ollama)
     MODEL="${OLLAMA_MODEL:-qwen3.5:35b}"
     : "${OLLAMA_HOST:?Set OLLAMA_HOST (e.g. https://ollama.zib.de/ollama)}"
-    : "${OLLAMA_API_BASE:?Set OLLAMA_API_BASE (same value as OLLAMA_HOST)}"
     : "${OLLAMA_API_KEY:?Set OLLAMA_API_KEY}"
     ENV_ARGS=(
+      -e LLM_PROVIDER=ollama
       -e OLLAMA_HOST="$OLLAMA_HOST"
-      -e OLLAMA_API_BASE="$OLLAMA_API_BASE"
       -e OLLAMA_API_KEY="$OLLAMA_API_KEY"
     )
     ;;
   openrouter)
     MODEL="${OPENROUTER_MODEL:-anthropic/claude-sonnet-4.5}"
     : "${OPENROUTER_API_KEY:?Set OPENROUTER_API_KEY}"
-    ENV_ARGS=(-e OPENROUTER_API_KEY="$OPENROUTER_API_KEY")
+    ENV_ARGS=(-e LLM_PROVIDER=openrouter -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY")
     ;;
   zib)
     MODEL="${ZIB_MODEL:-zib/konrad-1}"
     : "${ZIB_API_KEY:?Set ZIB_API_KEY}"
-    # Registered via the generic "custom" OpenAI-compatible provider path in
-    # entrypoint.sh (LLM_BASE_URL/LLM_API_KEY/...), named "zib" here so
-    # --provider zib below matches what gets registered.
-    ENV_ARGS=(
-      -e LLM_BASE_URL="https://tllm.science-berlin.de"
-      -e LLM_API_KEY="$ZIB_API_KEY"
-      -e LLM_MODEL="$MODEL"
-      -e LLM_PROVIDER_NAME=zib
-      -e LLM_API_TYPE=openai-completions
-    )
+    ENV_ARGS=(-e LLM_PROVIDER=zib -e ZIB_API_KEY="$ZIB_API_KEY" -e LLM_MODEL="$MODEL")
     ;;
   *)
     echo "Unknown LLM_PROVIDER '$LLM_PROVIDER' -- expected 'ollama', 'openrouter', or 'zib'" >&2
@@ -86,18 +83,19 @@ esac
 echo "=== running with provider='$LLM_PROVIDER' model='$MODEL' ==="
 
 # Pass DISCORD_WEBHOOK_URL through if set, so local runs can exercise the
-# same delivery path the eventual K8s Job uses. Unset it and pi-report.sh
+# same delivery path the eventual K8s Job uses. Unset it and pi-agent-task.sh
 # just skips that step.
 if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
   ENV_ARGS+=(-e DISCORD_WEBHOOK_URL="$DISCORD_WEBHOOK_URL")
 fi
 
-# pi-report.sh (baked into the image at /usr/local/bin/pi-report.sh) is the
-# single place that runs pi, concatenates both skills into the prompt, writes
-# trace.html, and delivers the result (report.pdf -> Discord webhook,
-# report.md -> stdout between markers). It's shared with the eventual K8s
-# Job's container command, so local runs here exercise the exact same code
-# path as the deployed version -- not a separate inline copy of the logic.
+# pi-agent-task.sh (baked into the image at /usr/local/bin/pi-agent-task.sh)
+# is the single place that runs pi, concatenates all skills into the prompt,
+# writes trace.html, and delivers the result (agent-decided, e.g. a file ->
+# Discord webhook, a scratch URL -> stdout between markers). It's shared with
+# the eventual K8s Job's container command, so local runs here exercise the
+# exact same code path as the deployed version -- not a separate inline copy
+# of the logic.
 #
 # Full raw JSONL always goes to run.jsonl regardless of console formatting.
 # pretty.py merges streaming deltas into one readable line per block for the
@@ -105,7 +103,7 @@ fi
 docker run --rm \
   "${ENV_ARGS[@]}" \
   -v "$OUTPUT_ABS":/output \
-  pi-agent pi-report.sh "$LLM_PROVIDER" "$MODEL" "$PROMPT" \
+  pi-agent pi-agent-task.sh "$LLM_PROVIDER" "$MODEL" "$PROMPT" \
   | tee "$OUTPUT_DIR/run.jsonl" \
   | if [ -n "${RAW:-}" ]; then cat; else python3 "$SCRIPT_DIR/pretty.py"; fi
 

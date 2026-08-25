@@ -30,9 +30,9 @@ for line in sys.stdin:
     try:
         d = json.loads(line)
     except json.JSONDecodeError:
-        # Not a pi event -- e.g. pi-report.sh's delivery status/errors and the
-        # report.md dump it prints after pi's own JSON stream ends. Pass it
-        # through as-is rather than silently dropping it.
+        # Not a pi event -- e.g. pi-agent-task.sh's delivery status/errors and
+        # the report.md dump it prints after pi's own JSON stream ends. Pass
+        # it through as-is rather than silently dropping it.
         print(line, flush=True)
         continue
 

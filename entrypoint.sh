@@ -5,6 +5,39 @@ CONFIG_DIR="$HOME/.pi/agent"
 mkdir -p "$CONFIG_DIR"
 mkdir -p /output
 
+# LLM_PROVIDER shorthand -- expands to the generic custom-provider vars
+# (LLM_BASE_URL/LLM_API_KEY/...) or the native-Ollama vars (OLLAMA_*) below,
+# whichever haven't already been set explicitly. This used to live only in
+# run-prompt.sh's bash `case` statement, which meant any invocation path
+# that bypassed run-prompt.sh (a Prefect-triggered K8s Job calling
+# pi-agent-task.sh directly) never got the shorthand -- moved here so it's
+# one implementation shared by every path, not two that can drift apart.
+case "${LLM_PROVIDER:-}" in
+  zib)
+    : "${ZIB_API_KEY:?Set ZIB_API_KEY for LLM_PROVIDER=zib}"
+    LLM_BASE_URL="${LLM_BASE_URL:-https://tllm.science-berlin.de}"
+    LLM_API_KEY="${LLM_API_KEY:-$ZIB_API_KEY}"
+    LLM_MODEL="${LLM_MODEL:-zib/konrad-1}"
+    LLM_PROVIDER_NAME="${LLM_PROVIDER_NAME:-zib}"
+    LLM_API_TYPE="${LLM_API_TYPE:-openai-completions}"
+    ;;
+  ollama)
+    : "${OLLAMA_HOST:?Set OLLAMA_HOST for LLM_PROVIDER=ollama (e.g. https://ollama.zib.de/ollama)}"
+    : "${OLLAMA_API_KEY:?Set OLLAMA_API_KEY for LLM_PROVIDER=ollama}"
+    OLLAMA_API_BASE="${OLLAMA_API_BASE:-$OLLAMA_HOST}"
+    ;;
+  openrouter)
+    : "${OPENROUTER_API_KEY:?Set OPENROUTER_API_KEY for LLM_PROVIDER=openrouter}"
+    # No further setup needed -- OpenRouter is built into pi natively.
+    ;;
+  custom|"")
+    ;;  # generic path below handles LLM_BASE_URL/LLM_API_KEY directly if set
+  *)
+    echo "pi: unknown LLM_PROVIDER '${LLM_PROVIDER}' -- expected 'zib', 'ollama', 'openrouter', or 'custom'" >&2
+    exit 1
+    ;;
+esac
+
 if [ -n "${LLM_BASE_URL:-}" ] && [ -n "${LLM_API_KEY:-}" ]; then
   API_TYPE="${LLM_API_TYPE:-openai-completions}"
   PROVIDER_NAME="${LLM_PROVIDER_NAME:-custom}"
