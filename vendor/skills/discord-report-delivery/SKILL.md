@@ -21,12 +21,21 @@ If the prompt does ask for Discord delivery:
    it and don't fabricate success.
 2. Once you have finished producing and verifying the task's deliverable
    (per harness-conventions -- never deliver a file you haven't confirmed
-   exists and looks right), post it to that webhook yourself:
+   exists and looks right), post it to that webhook yourself, **always
+   together with a `content` field giving a one-to-two-sentence,
+   human-readable explanation of what the file is** -- never post a bare
+   attachment with no context:
 
    ```bash
-   curl -sS -f -F "file1=@/output/report.pdf" "$DISCORD_WEBHOOK_URL"
+   curl -sS -f \
+     -F "content=Code analysis report for <repo-name>: <one-line summary of what was found, e.g. severity/count of the top findings>." \
+     -F "file1=@/output/report.pdf" \
+     "$DISCORD_WEBHOOK_URL"
    ```
 
+   The `content` text should be specific to this run -- name the repo/subject
+   and the gist of the result (e.g. "3 medium-severity findings, no
+   high-severity bugs"), not a generic placeholder like "Here is the report."
    Post the file the task actually asked for -- not every intermediate file
    sitting in `/output`.
 3. Verify the `curl` call actually succeeded (its exit code, and that it
