@@ -12,6 +12,14 @@ per the harness-conventions skill). Base everything on code you actually
 read -- never describe a file, risk, or behavior you did not verify by
 reading it.
 
+**Also copy the source `report.md` into the output directory next to
+`report.pdf`.** The report is frequently handed to another LLM-based coding
+agent to act on, and pandoc's multi-page PDF tables split cells across page
+breaks in ways that scramble text extraction (a row's Evidence/Fix columns
+can land on different pages and get read back interleaved). The Markdown
+source has no such corruption and should be the version a downstream agent
+actually consumes -- the PDF is for human readers.
+
 ## Frontmatter
 
 ```yaml
@@ -43,10 +51,13 @@ A table, one row per finding, ordered High → Medium → Low:
 | Severity | Finding | Evidence | Impact | Recommendation |
 |---|---|---|---|---|
 
-"Evidence" must cite actual code (file/function/line-level detail), not a
-generic claim. Skip this section entirely (don't pad it) if the codebase is
-too trivial to have any findings -- say so in one sentence instead of a
-table with invented rows.
+"Evidence" must cite actual code with an exact `file:line` (or line range),
+not just a quoted snippet -- a snippet alone can match more than one spot in
+the file and send a downstream fixer to the wrong occurrence.
+
+Skip either section entirely (don't pad it) if the codebase is too trivial
+to have any findings -- say so in one sentence instead of a table with
+invented rows.
 
 ### Overall Logic
 Walk the main execution path step by step (numbered list), naming the actual
@@ -69,7 +80,17 @@ contributor.
 
 ### Remediation Roadmap
 A short numbered list (5-8 items) ordering the fixes above by what should
-be done first.
+be done first. Each item must:
+- Start with a `[Fix]` or `[Consider]` tag: `[Fix]` for a mechanical,
+  unambiguous change with one clearly correct implementation (e.g. "add a
+  `<= 0` guard"); `[Consider]` for a design tradeoff with more than one
+  reasonable implementation (e.g. "make the imputation policy
+  configurable"). This report is often handed to another coding agent to
+  act on directly -- `[Fix]` items are safe for it to apply autonomously,
+  `[Consider]` items need a human decision first.
+- Name the test file that should gain a regression test covering the
+  change (e.g. "extend `tests/test_run.py`"), or say "no test coverage
+  exists for this path yet" if none does.
 
 ### Closing Assessment
 One paragraph: overall verdict on the repository's maturity/quality, and
