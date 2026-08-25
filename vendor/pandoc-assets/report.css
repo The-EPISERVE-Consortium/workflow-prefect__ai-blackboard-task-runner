@@ -122,5 +122,6 @@ th, td {
   border-bottom: 1px solid #ddd;
   padding: 0.4em 0.6em;
   text-align: left;
+  vertical-align: top;
   overflow-wrap: break-word;
 }
