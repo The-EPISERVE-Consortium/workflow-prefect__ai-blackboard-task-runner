@@ -35,13 +35,34 @@ everything else stays inside the container and is discarded after the run.
 
 ## Run via Prefect
 
+Named tasks (a fixed, real prompt each, no placeholders) live in
+`deploy/tasks.yaml`. Each gets its own daily-scheduled Prefect deployment
+unless `run_daily: false`.
+
 ```bash
+# deploy everything in deploy/tasks.yaml (+ the 'manual' deployment):
 PREFECT_API_URL=https://your.prefect.server/api python deploy.py
-prefect deployment run 'agent-task-pipeline/run-ai-task' \
-  -p prompt="Clone <repo-url>, analyse the content and write a report to /output/report.pdf" \
-  -p provider=zib -p model=zib/konrad-1
+
+# ...or just one task, or just the 'manual' deployment:
+PREFECT_API_URL=https://your.prefect.server/api python -m deploy timesfm-code-analysis
+PREFECT_API_URL=https://your.prefect.server/api python -m deploy --manual
+
+# trigger every enabled task right now, in addition to its daily schedule:
+PREFECT_API_URL=https://your.prefect.server/api python run.py
+
+# or trigger just one:
+prefect deployment run 'agent-task-pipeline/run-ai-task-timesfm-code-analysis'
+
+# one-off custom prompt, no registry entry needed -- prompt is required here,
+# there is deliberately no default (a task with no prompt doesn't make sense):
+prefect deployment run 'agent-task-pipeline/manual' \
+  -p prompt="Clone <repo-url>, analyse the content and write a report to /output/report.pdf"
 ```
+
+Adding a new task never needs code changes — add an entry to
+`deploy/tasks.yaml` (see the file for the shape) and redeploy it.
+
 The Kubernetes Job's env needs `LLM_PROVIDER` + the matching provider API
-key (e.g. `ZIB_API_KEY`), kept in sync with the `provider` parameter above —
-see `flow/agent_task_flow.py` and the harness notes (Appendix G) for why
-these are two separate things that both need setting.
+key (e.g. `ZIB_API_KEY`) — see the harness notes (Appendix A and G) for how
+that's wired in via a sealed secret and the work pool's base job template,
+independent of the `provider` flow parameter above.
