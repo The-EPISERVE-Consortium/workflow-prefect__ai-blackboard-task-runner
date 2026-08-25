@@ -11,7 +11,9 @@ import yaml
 from flow.agent_task_flow import agent_task_pipeline
 
 GITHUB_REPO_URL = "https://github.com/The-EPISERVE-Consortium/workflow-prefect__run-ai-task"
-DOCKER_IMAGE = "ghcr.io/the-episerve-consortium/workflow-prefect__run-ai-task:latest"
+# publish.yml tags by branch ref (docker/metadata-action's type=ref,event=branch),
+# not "latest" -- matches workflow-prefect__model-runner's own convention.
+DOCKER_IMAGE = "ghcr.io/the-episerve-consortium/workflow-prefect__run-ai-task:main"
 REGISTRY_PATH = Path(__file__).with_name("tasks.yaml")
 REQUIRED_PARAMETERS = {"prompt"}
 MANUAL_DEPLOYMENT_NAME = "manual"
