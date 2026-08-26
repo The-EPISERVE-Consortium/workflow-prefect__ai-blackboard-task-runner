@@ -62,6 +62,45 @@ python3 /opt/pi-trace-extension/extensions/trace/trace_to_html.py >&2 || true
 HTML=$(ls -t /root/.pi/agent/traces/*/trace.html 2>/dev/null | head -1)
 [ -n "$HTML" ] && cp "$HTML" "$OUTPUT_DIR/trace.html"
 
+# Attaching this session's trace.html to its own blackboard row, if the
+# blackboard-communication skill published one: the row itself was
+# necessarily written *before* trace.html exists (pi is still running at
+# that point), so this can't happen inline as part of the INSERT -- the
+# skill instead drops the new row's id in a marker file, and this step
+# closes the loop deterministically once the trace is actually available.
+# Best-effort: a task that didn't publish (no marker file) or whose
+# publish failed for its own reasons just skips this, same `|| true`
+# philosophy as trace_to_html.py above.
+if [ -f "$OUTPUT_DIR/.blackboard_row_id" ] && [ -f "$OUTPUT_DIR/trace.html" ]; then
+  python3 - <<'PY' >&2 || true
+import os
+import pymysql
+
+with open("/output/.blackboard_row_id", encoding="utf-8") as f:
+    row_id = int(f.read().strip())
+with open("/output/trace.html", encoding="utf-8") as f:
+    trace_html = f.read()
+
+conn = pymysql.connect(
+    host=os.environ["MARIADB_HOST"],
+    user=os.environ["BLACKBOARD_USER"],
+    password=os.environ["BLACKBOARD_PASSWORD"],
+    database=os.environ["BLACKBOARD_DB"],
+    charset="utf8mb4",  # server default connection charset is utf8mb3;
+                        # trace.html routinely contains 4-byte characters
+                        # (pi-trace-extension's UI uses emoji)
+)
+try:
+    with conn.cursor() as cur:
+        cur.execute("UPDATE task_runs SET trace=%s WHERE id=%s", (trace_html, row_id))
+        conn.commit()
+    print(f"blackboard: attached trace.html to task_runs.id={row_id}")
+finally:
+    conn.close()
+PY
+  rm -f "$OUTPUT_DIR/.blackboard_row_id"
+fi
+
 # Surfacing report.md if the task produced one -- not part of pi's own event
 # stream, goes to stderr, same convention as trace_to_html.py above, so it
 # never lands in run.jsonl (which run-prompt.sh's stdout pipeline treats as
