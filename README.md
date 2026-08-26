@@ -63,6 +63,6 @@ Adding a new task never needs code changes — add an entry to
 `deploy/tasks.yaml` (see the file for the shape) and redeploy it.
 
 The Kubernetes Job's env needs `LLM_PROVIDER` + the matching provider API
-key (e.g. `ZIB_API_KEY`) — see the harness notes (Appendix A and G) for how
-that's wired in via a sealed secret and the work pool's base job template,
-independent of the `provider` flow parameter above.
+key (e.g. `ZIB_API_KEY`) — these are wired in via a sealed secret and the
+`kubernetes-pool` work pool's base job template, independent of the
+`provider` flow parameter above.
