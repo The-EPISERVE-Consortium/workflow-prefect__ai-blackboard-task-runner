@@ -40,16 +40,26 @@ skipping the write.
 |---|---|---|
 | `id` | auto | Primary key |
 | `task_type` | **you** | Short, stable label for what kind of result this is (see below) |
-| `status` | orchestrator only | `new` \| `claimed` \| `done` -- always starts `new`; never set this yourself |
+| `kind` | **you** | Always `'result'` for a row this skill writes -- see below |
+| `prompt` | **you** | The exact task prompt you were given -- see below |
+| `status` | orchestrator only | `new` \| `dispatching_run` \| `waiting_for_next_periodic_run` \| `done` -- always starts `new`; never set this yourself |
 | `result` | **you** | The actual payload -- markdown, JSON, or plain text, whatever the result naturally is |
 | `trace` | `pi-agent-task.sh`, automatic | This session's `trace.html`, attached to your row after you finish -- see below. Never set this yourself; it doesn't exist yet while you're running (see below). |
 | `created_at` | auto | |
-| `claimed_by` / `claimed_at` | orchestrator only | Never set these -- they belong to the orchestrator's claim lifecycle |
+| `schedule_type` / `periodic_interval_minutes` / `periodic_last_triggered_at` | n/a | Only meaningful on `kind='initial'` rows (seeded directly, not written by this skill) -- leave these unset |
+| `last_status_change` | orchestrator only, automatic | Never set this yourself -- it tracks the orchestrator's claim lifecycle |
 
 You only ever **insert one new row** with your own result. You have DB
 privileges to `UPDATE`, but that's reserved for the orchestrator claiming and
 completing rows -- don't touch a row you didn't just insert, and never
 `DELETE` anything.
+
+`kind` distinguishes a row you write (`'result'` -- an output with a
+`result` payload, routed to a follow-up prompt by the orchestrator's
+`routing.py`) from a `kind='initial'` row (seeded directly with its own
+`prompt`, no `result`, sometimes recurring) -- this skill only ever produces
+the former. Set it explicitly to `'result'` on your `INSERT` rather than
+relying on the column default.
 
 `task_type` is the field the orchestrator pattern-matches on to decide what
 happens next, so get it right:
@@ -59,6 +69,13 @@ happens next, so get it right:
   result (e.g. `bug-report`, `fix-summary`), not a one-off description of
   this specific run -- state whatever you chose plainly in your final
   summary so it's visible.
+
+`prompt` is the literal task prompt you were given -- everything after the
+`---` separator in your own instructions, not the skill text above it
+(the harness-conventions/code-analysis-report/etc. content, or this skill's
+own instructions, is never part of `prompt`). Store it verbatim, exactly as
+you received it, with no summarizing or rewording -- this is what lets
+anyone reading a row later answer "what was this run actually asked to do."
 
 ## Writing the row
 
@@ -77,6 +94,11 @@ import pymysql
 with open("/output/report.md", encoding="utf-8") as f:
     result_text = f.read()
 
+# The literal task prompt you were given, verbatim -- write out the actual
+# text here yourself (everything after the "---" separator in your own
+# instructions), don't read it from a file, it isn't one.
+task_prompt = "..."
+
 conn = pymysql.connect(
     host=os.environ["MARIADB_HOST"],
     user=os.environ["BLACKBOARD_USER"],
@@ -91,8 +113,8 @@ conn = pymysql.connect(
 try:
     with conn.cursor() as cur:
         cur.execute(
-            "INSERT INTO task_runs (task_type, result) VALUES (%s, %s)",
-            ("bug-report", result_text),
+            "INSERT INTO task_runs (task_type, kind, prompt, result) VALUES (%s, %s, %s, %s)",
+            ("bug-report", "result", task_prompt, result_text),
         )
         conn.commit()
         new_id = cur.lastrowid

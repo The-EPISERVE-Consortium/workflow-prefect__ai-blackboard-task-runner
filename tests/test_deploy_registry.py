@@ -1,86 +1,41 @@
 """Unit tests for deploy/deploy_registry.py."""
 
+import os
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from deploy.deploy_registry import _validate_task_config
+from deploy.deploy_registry import (
+    DOCKER_IMAGE,
+    MANUAL_DEPLOYMENT_NAME,
+    WORK_POOL_NAME,
+    _require_prefect_api_url,
+    deploy_manual,
+)
 
 
-DEFAULTS = {
-    "work_pool_name": "kubernetes-pool",
-    "provider": "zib",
-    "model": "zib/konrad-1",
-    "run_daily": True,
-}
+def test_require_prefect_api_url_raises_when_unset(monkeypatch):
+    monkeypatch.delenv("PREFECT_API_URL", raising=False)
+    with pytest.raises(EnvironmentError, match="PREFECT_API_URL"):
+        _require_prefect_api_url()
 
 
-def test_validate_task_config_requires_deployment_name():
-    with pytest.raises(ValueError, match="deployment_name"):
-        _validate_task_config(
-            "some-task",
-            {"parameters": {"prompt": "Clone X, do Y."}},
-            DEFAULTS,
-        )
+def test_require_prefect_api_url_returns_env_value(monkeypatch):
+    monkeypatch.setenv("PREFECT_API_URL", "https://prefect.example.com/api")
+    assert _require_prefect_api_url() == "https://prefect.example.com/api"
 
 
-def test_validate_task_config_requires_parameters_mapping():
-    with pytest.raises(ValueError, match="parameters"):
-        _validate_task_config(
-            "some-task",
-            {"deployment_name": "run-ai-task-some-task"},
-            DEFAULTS,
-        )
+def test_deploy_manual_deploys_with_no_prompt_and_never_scheduled():
+    mock_pipeline = MagicMock()
+    with patch("deploy.deploy_registry.agent_task_pipeline") as mock_flow:
+        mock_flow.from_source.return_value = mock_pipeline
+        deploy_manual(prefect_api_url="https://prefect.example.com/api")
 
-
-def test_validate_task_config_requires_prompt():
-    """A task with no prompt doesn't make sense -- must fail loudly, not default."""
-    with pytest.raises(ValueError, match="prompt"):
-        _validate_task_config(
-            "some-task",
-            {"deployment_name": "run-ai-task-some-task", "parameters": {}},
-            DEFAULTS,
-        )
-
-
-def test_validate_task_config_merges_defaults():
-    deployment_name, parameters, work_pool_name, run_daily = _validate_task_config(
-        "some-task",
-        {
-            "deployment_name": "run-ai-task-some-task",
-            "parameters": {"prompt": "Clone X, do Y."},
-        },
-        DEFAULTS,
-    )
-
-    assert deployment_name == "run-ai-task-some-task"
-    assert parameters["prompt"] == "Clone X, do Y."
-    assert parameters["provider"] == "zib"
-    assert parameters["model"] == "zib/konrad-1"
-    assert work_pool_name == "kubernetes-pool"
-    assert run_daily is True
-
-
-def test_validate_task_config_parameters_override_defaults():
-    _, parameters, _, _ = _validate_task_config(
-        "some-task",
-        {
-            "deployment_name": "run-ai-task-some-task",
-            "parameters": {"prompt": "Clone X, do Y.", "model": "zib/qwen3.6-35b-a3b"},
-        },
-        DEFAULTS,
-    )
-
-    assert parameters["model"] == "zib/qwen3.6-35b-a3b"
-
-
-def test_validate_task_config_run_daily_false_overrides_default():
-    _, _, _, run_daily = _validate_task_config(
-        "some-task",
-        {
-            "deployment_name": "run-ai-task-some-task",
-            "parameters": {"prompt": "Clone X, do Y."},
-            "run_daily": False,
-        },
-        DEFAULTS,
-    )
-
-    assert run_daily is False
+    assert os.environ["PREFECT_API_URL"] == "https://prefect.example.com/api"
+    mock_pipeline.deploy.assert_called_once()
+    _, kwargs = mock_pipeline.deploy.call_args
+    assert kwargs["name"] == MANUAL_DEPLOYMENT_NAME
+    assert kwargs["work_pool_name"] == WORK_POOL_NAME
+    assert kwargs["job_variables"] == {"image": DOCKER_IMAGE, "image_pull_policy": "Always"}
+    assert "parameters" not in kwargs
+    assert "schedules" not in kwargs

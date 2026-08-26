@@ -35,32 +35,28 @@ everything else stays inside the container and is discarded after the run.
 
 ## Run via Prefect
 
-Named tasks (a fixed, real prompt each, no placeholders) live in
-`deploy/tasks.yaml`. Each gets its own daily-scheduled Prefect deployment
-unless `run_daily: false`.
+There is exactly one Prefect deployment, `manual` — no baked-in prompt,
+ever. Every run supplies its own prompt at trigger time: a human via
+`prefect deployment run`, or
+[`workflow-prefect__generate-ai-task-from-blackboard`](https://github.com/The-EPISERVE-Consortium/workflow-prefect__generate-ai-task-from-blackboard)'s
+orchestrator acting on a `kind='initial'` row in the shared blackboard table
+(`agent_blackboard.task_runs`) — including recurring tasks, which are
+periodic blackboard rows rather than scheduled deployments in this repo.
 
 ```bash
-# deploy everything in deploy/tasks.yaml (+ the 'manual' deployment):
+# register/update the 'manual' deployment:
 PREFECT_API_URL=https://your.prefect.server/api python deploy.py
 
-# ...or just one task, or just the 'manual' deployment:
-PREFECT_API_URL=https://your.prefect.server/api python -m deploy timesfm-code-analysis
-PREFECT_API_URL=https://your.prefect.server/api python -m deploy --manual
-
-# trigger every enabled task right now, in addition to its daily schedule:
-PREFECT_API_URL=https://your.prefect.server/api python run.py
-
-# or trigger just one:
-prefect deployment run 'agent-task-pipeline/run-ai-task-timesfm-code-analysis'
-
-# one-off custom prompt, no registry entry needed -- prompt is required here,
-# there is deliberately no default (a task with no prompt doesn't make sense):
+# one-off custom prompt -- prompt is required here, there is deliberately no
+# default (a task with no prompt doesn't make sense):
+PREFECT_API_URL=https://your.prefect.server/api \
 prefect deployment run 'agent-task-pipeline/manual' \
   -p prompt="Clone <repo-url>, analyse the content and write a report to /output/report.pdf"
 ```
 
-Adding a new task never needs code changes — add an entry to
-`deploy/tasks.yaml` (see the file for the shape) and redeploy it.
+A recurring task is added by inserting a `kind='initial'` row into the
+blackboard table (see that repo's README), not by adding code or
+deployments here.
 
 The Kubernetes Job's env needs `LLM_PROVIDER` + the matching provider API
 key (e.g. `ZIB_API_KEY`) — these are wired in via a sealed secret and the
