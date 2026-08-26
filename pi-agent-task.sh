@@ -5,10 +5,11 @@
 # assumption about what the task produces or where.
 #
 # Delivery is the agent's own decision, driven by skills force-loaded below
-# (discord-delivery, scratch-url-upload) -- e.g. if the prompt asks for
-# Discord delivery, pi itself posts the file as one of its own tool calls,
-# not this script. This script only handles what's generic across every
-# task: propagating pi's own exit code (via `set -e`, no per-file check --
+# (discord-delivery, scratch-url-upload, blackboard-communication) -- e.g. if
+# the prompt asks for Discord delivery, pi itself posts the file as one of
+# its own tool calls, not this script. This script only handles what's
+# generic across every task: propagating pi's own exit code (via `set -e`,
+# no per-file check --
 # what "success" means depends on the task), writing trace.html, and -- if
 # the task happened to produce a report.md (the code-analysis-report skill's
 # own convention, not a requirement imposed here) -- surfacing it to stderr
@@ -36,6 +37,8 @@ $(cat /opt/skills/discord-delivery/SKILL.md)
 
 $(cat /opt/skills/scratch-url-upload/SKILL.md)
 
+$(cat /opt/skills/blackboard-communication/SKILL.md)
+
 ---
 
 $PROMPT"
@@ -52,6 +55,7 @@ $PROMPT"
 pi --provider "$PROVIDER" --model "$MODEL" \
    --skill /opt/skills/harness-conventions --skill /opt/skills/code-analysis-report \
    --skill /opt/skills/discord-delivery --skill /opt/skills/scratch-url-upload \
+   --skill /opt/skills/blackboard-communication \
    --mode json -p "$FULL_PROMPT" < /dev/null
 
 python3 /opt/pi-trace-extension/extensions/trace/trace_to_html.py >&2 || true

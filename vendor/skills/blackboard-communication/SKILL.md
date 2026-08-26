@@ -1,0 +1,116 @@
+---
+name: blackboard-communication
+description: Use only when the prompt explicitly asks to publish/write/share results to the blackboard for other agents to pick up (e.g. "publish your findings to the blackboard", "write this result to the blackboard so a follow-up task can act on it"). Not triggered by default -- most runs are one-off and should not write anything to this table.
+---
+
+# Blackboard communication
+
+This harness is one participant in a loosely-coupled, multi-agent pipeline.
+Independent one-shot agent runs (each its own container, its own prompt, no
+shared memory) hand work to each other indirectly through a shared MariaDB
+table, `task_runs` -- a "blackboard" a separate periodic orchestrator process
+polls for new rows, decides what's actionable, and triggers new one-shot runs
+of its own. This skill is only the *write* side of that: how this run
+publishes a result so the orchestrator can find it later.
+
+Only act if the prompt explicitly asks for this (wording like "publish to
+the blackboard", "write your result to the blackboard", "make this available
+for a follow-up task"). If it doesn't, do nothing in this skill -- most runs
+are standalone and have no downstream consumer.
+
+## Connection
+
+The container already has everything needed in its environment -- don't ask
+for credentials, don't guess a hostname:
+
+| Env var | Meaning |
+|---|---|
+| `MARIADB_HOST` | Database host (same MariaDB instance other platform workflows use) |
+| `BLACKBOARD_DB` | Database name (`agent_blackboard`) |
+| `BLACKBOARD_USER` | DB user -- scoped to `BLACKBOARD_DB` only, nothing else on this instance |
+| `BLACKBOARD_PASSWORD` | Password for that user |
+
+If any of these are unset or empty, this is a real failure of what was
+asked -- say so explicitly in your final summary rather than silently
+skipping the write.
+
+## Table shape (`task_runs`)
+
+| Column | Who writes it | Meaning |
+|---|---|---|
+| `id` | auto | Primary key |
+| `task_type` | **you** | Short, stable label for what kind of result this is (see below) |
+| `status` | orchestrator only | `new` \| `claimed` \| `done` -- always starts `new`; never set this yourself |
+| `result` | **you** | The actual payload -- markdown, JSON, or plain text, whatever the result naturally is |
+| `trace` | **you**, optional | Trace/debug content if the prompt or a loaded skill produced one worth keeping (e.g. contents of `trace.html`); leave unset if there's nothing beyond the normal trace already written to `/output/trace.html` |
+| `created_at` | auto | |
+| `claimed_by` / `claimed_at` | orchestrator only | Never set these -- they belong to the orchestrator's claim lifecycle |
+
+You only ever **insert one new row** with your own result. You have DB
+privileges to `UPDATE`, but that's reserved for the orchestrator claiming and
+completing rows -- don't touch a row you didn't just insert, and never
+`DELETE` anything.
+
+`task_type` is the field the orchestrator pattern-matches on to decide what
+happens next, so get it right:
+- If the prompt names a specific value to use, use exactly that string,
+  verbatim -- don't paraphrase or reformat it.
+- Otherwise, pick a short, stable, kebab-case label describing the *kind* of
+  result (e.g. `bug-report`, `fix-summary`), not a one-off description of
+  this specific run -- state whatever you chose plainly in your final
+  summary so it's visible.
+
+## Writing the row
+
+Use `pymysql` (already installed) with a parameterized query -- **never**
+build a SQL string yourself by interpolating the result content into a
+shell command or an f-string. Report content is often long, multi-line
+markdown/JSON full of quotes, backticks, and semicolons; hand-escaping that
+for a shell heredoc is exactly the kind of thing that silently corrupts data
+or breaks the query. Read the content from the file you already wrote and
+pass it as a bound parameter:
+
+```python
+import os
+import pymysql
+
+with open("/output/report.md", encoding="utf-8") as f:
+    result_text = f.read()
+
+conn = pymysql.connect(
+    host=os.environ["MARIADB_HOST"],
+    user=os.environ["BLACKBOARD_USER"],
+    password=os.environ["BLACKBOARD_PASSWORD"],
+    database=os.environ["BLACKBOARD_DB"],
+)
+try:
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO task_runs (task_type, result) VALUES (%s, %s)",
+            ("bug-report", result_text),
+        )
+        conn.commit()
+        new_id = cur.lastrowid
+finally:
+    conn.close()
+
+print(f"blackboard: wrote task_runs.id={new_id}")
+```
+
+Run this as `python3 - <<'PY' ... PY` (or a short `.py` file) rather than
+`python3 -c "..."` if the snippet needs editing -- keeps quoting simple.
+
+Include the `trace` column in the same `INSERT` (add `trace` to the column
+list and pass its content as a third parameter) only if you have trace
+content worth attaching; otherwise omit the column entirely and let it stay
+`NULL`.
+
+## Verifying
+
+Before your final message claims the blackboard write succeeded: confirm
+`cur.lastrowid` is a real, non-zero id and that `conn.commit()` ran without
+raising. A `pymysql` exception (bad credentials, connection refused, a
+constraint violation) is a real failure -- report it plainly in your final
+summary, including the actual error message, rather than reporting the
+publish as done. Never claim a row was written without having actually seen
+the insert succeed.
