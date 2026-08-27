@@ -39,7 +39,7 @@ There is exactly one Prefect deployment, `manual` — no baked-in prompt,
 ever. Every run supplies its own prompt at trigger time: a human via
 `prefect deployment run`, or
 [`workflow-prefect__generate-ai-task-from-blackboard`](https://github.com/The-EPISERVE-Consortium/workflow-prefect__generate-ai-task-from-blackboard)'s
-orchestrator acting on a `kind='initial'` row in the shared blackboard table
+orchestrator acting on a `post_type='run_me'` row in the shared blackboard table
 (`agent_blackboard.task_runs`) — including recurring tasks, which are
 periodic blackboard rows rather than scheduled deployments in this repo.
 
@@ -54,7 +54,7 @@ prefect deployment run 'agent-task-pipeline/manual' \
   -p prompt="Clone <repo-url>, analyse the content and write a report to /output/report.pdf"
 ```
 
-A recurring task is added by inserting a `kind='initial'` row into the
+A recurring task is added by inserting a `post_type='run_me'` row into the
 blackboard table (see that repo's README), not by adding code or
 deployments here.
 

@@ -40,26 +40,27 @@ skipping the write.
 |---|---|---|
 | `id` | auto | Primary key |
 | `task_type` | **you** | Short, stable label for what kind of result this is (see below) |
-| `kind` | **you** | Always `'result'` for a row this skill writes -- see below |
+| `post_type` | **you** | Always `'someone_take_over'` for a row this skill writes -- see below |
 | `prompt` | **you** | The exact task prompt you were given -- see below |
-| `status` | orchestrator only | `new` \| `dispatching_run` \| `waiting_for_next_periodic_run` \| `done` -- always starts `new`; never set this yourself |
-| `result` | **you** | The actual payload -- markdown, JSON, or plain text, whatever the result naturally is |
+| `state` | orchestrator only | `waiting` \| `dispatching_run` \| `waiting_for_next_periodic_run` \| `resolved` -- always starts `waiting`; never set this yourself |
+| `finding` | **you** | The actual payload -- markdown, JSON, or plain text, whatever the result naturally is |
 | `trace` | `pi-agent-task.sh`, automatic | This session's `trace.html`, attached to your row after you finish -- see below. Never set this yourself; it doesn't exist yet while you're running (see below). |
 | `created_at` | auto | |
-| `schedule_type` / `periodic_interval_minutes` / `periodic_last_triggered_at` | n/a | Only meaningful on `kind='initial'` rows (seeded directly, not written by this skill) -- leave these unset |
-| `last_status_change` | orchestrator only, automatic | Never set this yourself -- it tracks the orchestrator's claim lifecycle |
+| `periodic_interval_minutes` / `periodic_last_triggered_at` | n/a | Only meaningful on `post_type='run_me'` rows (seeded directly, not written by this skill) -- leave these unset |
+| `last_state_change` | orchestrator only, automatic | Never set this yourself -- it tracks the orchestrator's claim lifecycle |
 
 You only ever **insert one new row** with your own result. You have DB
 privileges to `UPDATE`, but that's reserved for the orchestrator claiming and
 completing rows -- don't touch a row you didn't just insert, and never
 `DELETE` anything.
 
-`kind` distinguishes a row you write (`'result'` -- an output with a
-`result` payload, routed to a follow-up prompt by the orchestrator's
-`routing.py`) from a `kind='initial'` row (seeded directly with its own
-`prompt`, no `result`, sometimes recurring) -- this skill only ever produces
-the former. Set it explicitly to `'result'` on your `INSERT` rather than
-relying on the column default.
+`post_type` distinguishes a row you write (`'someone_take_over'` -- an
+output with a `finding` payload, routed to a follow-up prompt by the
+orchestrator's `routing.py`) from a `post_type='run_me'` row (seeded
+directly with its own `prompt`, no `finding`, sometimes recurring) -- this
+skill only ever produces the former. Set it explicitly to
+`'someone_take_over'` on your `INSERT` rather than relying on the column
+default.
 
 `task_type` is the field the orchestrator pattern-matches on to decide what
 happens next, so get it right:
@@ -113,8 +114,8 @@ conn = pymysql.connect(
 try:
     with conn.cursor() as cur:
         cur.execute(
-            "INSERT INTO task_runs (task_type, kind, prompt, result) VALUES (%s, %s, %s, %s)",
-            ("bug-report", "result", task_prompt, result_text),
+            "INSERT INTO task_runs (task_type, post_type, prompt, finding) VALUES (%s, %s, %s, %s)",
+            ("bug-report", "someone_take_over", task_prompt, result_text),
         )
         conn.commit()
         new_id = cur.lastrowid
