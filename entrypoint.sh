@@ -107,4 +107,32 @@ fi
 
 jq -n --argjson pkgs "$PACKAGES" '{packages: $pkgs}' > "$CONFIG_DIR/settings.json"
 
+# github-pr skill support: authenticate `gh`/`git` as the episerve-ai-bot
+# identity, once, here -- not per-skill-invocation, same reasoning as the
+# LLM_PROVIDER shorthand above (one implementation shared by every path,
+# rather than something the skill's own instructions would have to repeat
+# and could drift from).
+#
+# No `gh auth login` step -- `gh` already authenticates every command
+# directly off GITHUB_TOKEN when it's present in the environment (a login
+# step would only store credentials on disk for when the env var *isn't*
+# set, which doesn't apply here, and actively logs a confusing warning
+# since the env var takes precedence over it anyway). `gh auth setup-git`
+# alone is what's actually needed: it registers `gh` as git's credential
+# helper for github.com, so a plain `git clone`/`git push` also
+# authenticates via GITHUB_TOKEN -- no token ever gets embedded in a
+# remote URL. `gh auth status` then gives a real, live validity check
+# (it calls the GitHub API), logged here so an invalid/expired token is
+# visible immediately rather than only failing later mid-task.
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  gh auth setup-git 2>&1
+  git config --global user.name "${GITHUB_USER:-episerve-ai-bot}"
+  git config --global user.email "${GITHUB_EMAIL:-episerve-ai-bot@users.noreply.github.com}"
+  if gh auth status 2>&1; then
+    echo "pi: gh/git authenticated as '${GITHUB_USER:-episerve-ai-bot}'"
+  else
+    echo "pi: GITHUB_TOKEN appears invalid -- github-pr skill won't be able to push/open a PR this run" >&2
+  fi
+fi
+
 exec "$@"

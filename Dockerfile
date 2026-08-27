@@ -17,8 +17,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ripgrep \
         fd-find \
         mariadb-client \
+        gnupg \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /usr/bin/fdfind /usr/local/bin/fd
+
+# GitHub CLI -- needed by the github-pr skill (open a PR as the episerve-ai-bot
+# identity). Not in Debian's default apt repos, so add GitHub's own per their
+# documented install method.
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+        > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update && apt-get install -y --no-install-recommends gh \
+    && rm -rf /var/lib/apt/lists/*
 
 # Debian's pip refuses bare installs outside a venv (PEP 668) by default.
 # The container is fully disposable (/workspace isn't persisted, see
@@ -56,17 +68,19 @@ COPY vendor/pi-trace-extension /opt/pi-trace-extension
 # Skills encoding operational conventions (verify claimed outputs, pandoc's
 # PDF engine flag, don't guess paths/fabricate content), the code-analysis
 # report structure (one supported task among others, not the only one),
-# Discord delivery, scratch-URL upload, and blackboard publication. The
-# latter three are entirely the model's own decision -- driven by whether the
-# prompt explicitly asks for them, not by which env vars happen to be set.
-# All five are always force-loaded by pi-agent-task.sh (their full content is
-# concatenated directly into the prompt, not left to pi's on-demand skill
-# discovery, which the model doesn't reliably trigger on its own).
+# Discord delivery, scratch-URL upload, blackboard publication, and opening a
+# PR. The latter four are entirely the model's own decision -- driven by
+# whether the prompt explicitly asks for them, not by which env vars happen
+# to be set. All six are always force-loaded by pi-agent-task.sh (their full
+# content is concatenated directly into the prompt, not left to pi's
+# on-demand skill discovery, which the model doesn't reliably trigger on its
+# own).
 COPY vendor/skills/harness-conventions /opt/skills/harness-conventions
 COPY vendor/skills/code-analysis-report /opt/skills/code-analysis-report
 COPY vendor/skills/discord-delivery /opt/skills/discord-delivery
 COPY vendor/skills/scratch-url-upload /opt/skills/scratch-url-upload
 COPY vendor/skills/blackboard-communication /opt/skills/blackboard-communication
+COPY vendor/skills/github-pr /opt/skills/github-pr
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY pi-agent-task.sh /usr/local/bin/pi-agent-task.sh

@@ -39,6 +39,8 @@ $(cat /opt/skills/scratch-url-upload/SKILL.md)
 
 $(cat /opt/skills/blackboard-communication/SKILL.md)
 
+$(cat /opt/skills/github-pr/SKILL.md)
+
 ---
 
 $PROMPT"
@@ -55,7 +57,7 @@ $PROMPT"
 pi --provider "$PROVIDER" --model "$MODEL" \
    --skill /opt/skills/harness-conventions --skill /opt/skills/code-analysis-report \
    --skill /opt/skills/discord-delivery --skill /opt/skills/scratch-url-upload \
-   --skill /opt/skills/blackboard-communication \
+   --skill /opt/skills/blackboard-communication --skill /opt/skills/github-pr \
    --mode json -p "$FULL_PROMPT" < /dev/null
 
 python3 /opt/pi-trace-extension/extensions/trace/trace_to_html.py >&2 || true
