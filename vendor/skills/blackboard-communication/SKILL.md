@@ -39,7 +39,7 @@ skipping the write.
 | Column | Who writes it | Meaning |
 |---|---|---|
 | `id` | auto | Primary key |
-| `task_type` | **you** | Short, stable label for what kind of result this is (see below) |
+| `topic` | **you** | Short, stable label for what kind of result this is (see below) |
 | `post_type` | **you** | Always `'someone_take_over'` for a row this skill writes -- see below |
 | `prompt` | **you** | The exact task prompt you were given -- see below |
 | `state` | orchestrator only | `waiting` \| `dispatching_run` \| `waiting_for_next_periodic_run` \| `resolved` -- always starts `waiting`; never set this yourself |
@@ -55,14 +55,14 @@ completing rows -- don't touch a row you didn't just insert, and never
 `DELETE` anything.
 
 `post_type` distinguishes a row you write (`'someone_take_over'` -- an
-output with a `finding` payload, routed to a follow-up prompt by the
-orchestrator's `routing.py`) from a `post_type='run_me'` row (seeded
-directly with its own `prompt`, no `finding`, sometimes recurring) -- this
-skill only ever produces the former. Set it explicitly to
-`'someone_take_over'` on your `INSERT` rather than relying on the column
-default.
+output with a `finding` payload, matched by the orchestrator against its
+`routing_rules` table to build a follow-up prompt) from a
+`post_type='run_me'` row (seeded directly with its own `prompt`, no
+`finding`, sometimes recurring) -- this skill only ever produces the
+former. Set it explicitly to `'someone_take_over'` on your `INSERT` rather
+than relying on the column default.
 
-`task_type` is the field the orchestrator pattern-matches on to decide what
+`topic` is the field the orchestrator pattern-matches on to decide what
 happens next, so get it right:
 - If the prompt names a specific value to use, use exactly that string,
   verbatim -- don't paraphrase or reformat it.
@@ -114,7 +114,7 @@ conn = pymysql.connect(
 try:
     with conn.cursor() as cur:
         cur.execute(
-            "INSERT INTO task_runs (task_type, post_type, prompt, finding) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO task_runs (topic, post_type, prompt, finding) VALUES (%s, %s, %s, %s)",
             ("bug-report", "someone_take_over", task_prompt, result_text),
         )
         conn.commit()
