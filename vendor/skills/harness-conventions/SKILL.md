@@ -1,6 +1,6 @@
 ---
 name: harness-conventions
-description: Operational conventions for running unattended in this Docker harness -- verifying that claimed file outputs actually exist before reporting success, generating PDFs correctly with pandoc, and investigating tool failures instead of guessing paths or fabricating content. Always apply these when running headless.
+description: Operational conventions for running unattended in this Docker harness -- verifying that claimed file outputs actually exist before reporting success, ending every run with the ===AGENT_TASKS_COMPLETE=== marker only when the task truly succeeded, generating PDFs correctly with pandoc, and investigating tool failures instead of guessing paths or fabricating content. Always apply these when running headless.
 ---
 
 # Harness conventions
@@ -20,6 +20,26 @@ If a shell command is chained with `&&` and an earlier part fails, everything
 after it never ran. Prefer separate commands over long `&&` chains for any
 step whose completion matters (e.g. writing an output file) so a failure
 partway through is visible and doesn't silently skip the important part.
+
+## Ending a run
+
+An orchestrator scheduled this run and decides whether it succeeded by
+looking at your output. The **last thing you print**, after every part of
+the task is done and verified per the rule above, must be this exact line
+on its own:
+
+```
+===AGENT_TASKS_COMPLETE===
+```
+
+Print it **only** when the whole task the prompt asked for actually
+succeeded -- every file produced and checked, every requested delivery
+(Discord, PR, blackboard, scratch URL) confirmed. If any part failed, could
+not be completed, or you are unsure it worked, do **not** print the line;
+end instead with a short plain-text explanation of what went wrong. A run
+whose output does not contain `===AGENT_TASKS_COMPLETE===` is treated as
+failed -- so never print it "to be safe", and never print it before the
+work is finished.
 
 ## Never fabricate content
 
