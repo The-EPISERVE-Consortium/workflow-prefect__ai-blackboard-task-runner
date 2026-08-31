@@ -32,6 +32,22 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && apt-get update && apt-get install -y --no-install-recommends gh \
     && rm -rf /var/lib/apt/lists/*
 
+# EPISERVE platform + DOIP CLIs -- used by the episerve-platform-access and
+# doip-fdo-access skills to reach the running platform / DOIP server. Each
+# repo publishes a static linux-amd64 PyInstaller binary per GitHub release
+# (public repos, no auth needed). Pinned by tag; bump the ARG to move. The
+# `--help` calls are a build-time smoke test that the binary actually runs on
+# this base image (catches a glibc mismatch here rather than mid-run).
+ARG EPISERVE_CLIENT_VERSION=v0.1.12
+ARG EPISERVE_DOIP_CLI_VERSION=v0.0.5
+RUN curl -fsSL -o /usr/local/bin/episerve \
+        "https://github.com/The-EPISERVE-Consortium/episerve_client/releases/download/${EPISERVE_CLIENT_VERSION}/episerve-client-linux" \
+    && curl -fsSL -o /usr/local/bin/episerve-doip-cli \
+        "https://github.com/The-EPISERVE-Consortium/episerve_doip_server/releases/download/${EPISERVE_DOIP_CLI_VERSION}/episerve-doip-cli-linux" \
+    && chmod +x /usr/local/bin/episerve /usr/local/bin/episerve-doip-cli \
+    && /usr/local/bin/episerve --help >/dev/null \
+    && /usr/local/bin/episerve-doip-cli --help >/dev/null
+
 # Debian's pip refuses bare installs outside a venv (PEP 668) by default.
 # The container is fully disposable (/workspace isn't persisted, see
 # run-prompt.sh), so there's no system-Python-breakage risk worth the
@@ -68,19 +84,24 @@ COPY vendor/pi-trace-extension /opt/pi-trace-extension
 # Skills encoding operational conventions (verify claimed outputs, pandoc's
 # PDF engine flag, don't guess paths/fabricate content), the code-analysis
 # report structure (one supported task among others, not the only one),
-# Discord delivery, scratch-URL upload, blackboard publication, and opening a
-# PR. The latter four are entirely the model's own decision -- driven by
-# whether the prompt explicitly asks for them, not by which env vars happen
-# to be set. All six are always force-loaded by pi-agent-task.sh (their full
-# content is concatenated directly into the prompt, not left to pi's
-# on-demand skill discovery, which the model doesn't reliably trigger on its
-# own).
+# Discord delivery, scratch-URL upload, blackboard publication, opening a PR,
+# and reaching the live EPISERVE platform / DOIP server. Everything except
+# harness-conventions and code-analysis-report is entirely the model's own
+# decision -- driven by whether the prompt explicitly asks for it, not by
+# which env vars happen to be set. All eight are always force-loaded by
+# pi-agent-task.sh (their full content is concatenated directly into the
+# prompt, not left to pi's on-demand skill discovery, which the model doesn't
+# reliably trigger on its own). The episerve-platform-access and
+# doip-fdo-access skills shell out to the `episerve` / `episerve-doip-cli`
+# binaries installed above.
 COPY vendor/skills/harness-conventions /opt/skills/harness-conventions
 COPY vendor/skills/code-analysis-report /opt/skills/code-analysis-report
 COPY vendor/skills/discord-delivery /opt/skills/discord-delivery
 COPY vendor/skills/scratch-url-upload /opt/skills/scratch-url-upload
 COPY vendor/skills/blackboard-communication /opt/skills/blackboard-communication
 COPY vendor/skills/github-pr /opt/skills/github-pr
+COPY vendor/skills/episerve-platform-access /opt/skills/episerve-platform-access
+COPY vendor/skills/doip-fdo-access /opt/skills/doip-fdo-access
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY pi-agent-task.sh /usr/local/bin/pi-agent-task.sh

@@ -89,11 +89,14 @@ if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
   ENV_ARGS+=(-e DISCORD_WEBHOOK_URL="$DISCORD_WEBHOOK_URL")
 fi
 
-# Same reasoning for the blackboard-communication skill's connection vars --
-# pass through whichever of these happen to be set (all four, in practice;
-# partial sets just mean the skill's own env-var check reports a real
-# failure inside the session, the same way it would in the K8s job).
-for var in MARIADB_HOST BLACKBOARD_DB BLACKBOARD_USER BLACKBOARD_PASSWORD; do
+# Same reasoning for the connection vars of the blackboard-communication,
+# episerve-platform-access and doip-fdo-access skills -- pass through
+# whichever of these happen to be set; partial sets just mean the skill's own
+# env-var check reports a real failure inside the session, the same way it
+# would in the K8s job.
+for var in MARIADB_HOST BLACKBOARD_DB BLACKBOARD_USER BLACKBOARD_PASSWORD \
+           EPISERVE_API_URL EPISERVE_CKAN_URL EPISERVE_DOIP_URL EPISERVE_API_KEY \
+           DOIP_HOST DOIP_PORT DOIP_UPDATE_TOKEN; do
   if [ -n "${!var:-}" ]; then
     ENV_ARGS+=(-e "$var=${!var}")
   fi
