@@ -39,11 +39,15 @@ hostname (this runs in-cluster):
 
 | Env var | Meaning |
 |---|---|
-| `DOIP_HOST` | In-cluster Service DNS of the DOIP server pod (e.g. `episerve-doip.default.svc.cluster.local`) |
+| `DOIP_HOST` | Service DNS of the DOIP server pod (e.g. `doip-server.default.svc.cluster.local`) |
 | `DOIP_PORT` | Native DOIP port -- `3567` |
 | `DOIP_UPDATE_TOKEN` | Shared secret required **only** for `update`. Read directly by the CLI. Absent for read-only tasks -- that's fine. |
 
-In-cluster traffic to the server is plaintext, so always pass `--no-tls`.
+The server speaks **TLS-wrapped** DOIP frames with a self-signed certificate,
+so use the CLI's default: **do not pass `--no-tls`** (the handshake fails with
+"Socket closed before receiving expected bytes") and **do not pass `--secure`**
+(the cert's hostname won't match the in-cluster Service DNS). No TLS flag at
+all = TLS on, verification off, which is what works here.
 If an env var needed for what the prompt asked is unset, that's a real
 failure -- say so explicitly rather than skipping the call.
 
@@ -66,7 +70,7 @@ and the exit code is `0` on `ok:true`, `1` on `ok:false`. Parse it with `jq`;
 check `.ok` before trusting `.result`.
 
 ```bash
-DOIP="episerve-doip-cli --host $DOIP_HOST --port $DOIP_PORT --no-tls --force-json-output"
+DOIP="episerve-doip-cli --host $DOIP_HOST --port $DOIP_PORT --force-json-output"
 
 # metadata (all kernel blocks)
 $DOIP --action retrieve --object-id Q1748526042817
