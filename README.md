@@ -1,4 +1,4 @@
-# workflow-prefect__run-ai-task
+# workflow-prefect__ai-blackboard-task-runner
 
 Docker harness for the [pi coding agent](https://pi.dev) that runs a single
 prompt headlessly against an LLM provider and collects the resulting files,

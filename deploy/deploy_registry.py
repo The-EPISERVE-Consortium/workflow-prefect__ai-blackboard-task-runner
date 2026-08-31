@@ -16,10 +16,10 @@ from prefect.runner.storage import GitRepository
 
 from flow.agent_task_flow import agent_task_pipeline
 
-GITHUB_REPO_URL = "https://github.com/The-EPISERVE-Consortium/workflow-prefect__run-ai-task"
+GITHUB_REPO_URL = "https://github.com/The-EPISERVE-Consortium/workflow-prefect__ai-blackboard-task-runner"
 # publish.yml tags by branch ref (docker/metadata-action's type=ref,event=branch),
 # not "latest" -- matches workflow-prefect__model-runner's own convention.
-DOCKER_IMAGE = "ghcr.io/the-episerve-consortium/workflow-prefect__run-ai-task:main"
+DOCKER_IMAGE = "ghcr.io/the-episerve-consortium/workflow-prefect__ai-blackboard-task-runner:main"
 MANUAL_DEPLOYMENT_NAME = "manual"
 WORK_POOL_NAME = "kubernetes-pool"
 
