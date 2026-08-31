@@ -3,7 +3,7 @@ registers.
 
 Prompts are never pre-registered here. Every run supplies its own prompt at
 trigger time: a human via `prefect deployment run ... -p prompt=...`, or
-`workflow-prefect__generate-ai-task-from-blackboard`'s orchestrator acting on
+`workflow-prefect__ai-blackboard-orchestrator`'s orchestrator acting on
 a `post_type='run_me'` row in the shared blackboard table (`agent_blackboard.
 task_runs`) -- including recurring prompts, which now live as periodic
 blackboard rows rather than as scheduled deployments in this repo.

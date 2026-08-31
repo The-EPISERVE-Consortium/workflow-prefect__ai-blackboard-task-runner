@@ -38,7 +38,7 @@ everything else stays inside the container and is discarded after the run.
 There is exactly one Prefect deployment, `manual` — no baked-in prompt,
 ever. Every run supplies its own prompt at trigger time: a human via
 `prefect deployment run`, or
-[`workflow-prefect__generate-ai-task-from-blackboard`](https://github.com/The-EPISERVE-Consortium/workflow-prefect__generate-ai-task-from-blackboard)'s
+[`workflow-prefect__ai-blackboard-orchestrator`](https://github.com/The-EPISERVE-Consortium/workflow-prefect__ai-blackboard-orchestrator)'s
 orchestrator acting on a `post_type='run_me'` row in the shared blackboard table
 (`agent_blackboard.task_runs`) — including recurring tasks, which are
 periodic blackboard rows rather than scheduled deployments in this repo.
