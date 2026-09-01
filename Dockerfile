@@ -65,7 +65,12 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.
 # chip, two-column body) -- see vendor/pandoc-assets/report.css.
 COPY vendor/pandoc-assets /opt/pandoc-assets
 
-RUN npm install -g @earendil-works/pi-coding-agent
+# Intentionally unpinned -- always take the latest pi harness at build time.
+# The cache-bust ARG forces this layer (and only this layer onward) to rebuild
+# even when nothing else changed: `docker build --build-arg PI_BUILD_EPOCH=$(date +%s)`.
+ARG PI_BUILD_EPOCH=0
+RUN npm install -g @earendil-works/pi-coding-agent@latest \
+    && pi --help >/dev/null
 
 # Vendored, patched fork of v2nic/pi-ollama-provider: talks to Ollama's native
 # /api/chat (respects num_ctx, unlike the OpenAI-compat route which silently
