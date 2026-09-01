@@ -26,7 +26,7 @@ operation:
 
 | You want to... | Skill |
 |---|---|
-| Check platform health; list datasets-raw / datasets / models / model-runs | **this skill** (only option) |
+| Check platform health; list datasets / models / model-runs | **this skill** (only option) |
 | Trigger a model run | **this skill** (only option) |
 | Get an item's **CKAN catalog record** | **this skill** (only option) |
 | List an FDO's components / download a component **at its latest version** | **this skill** -- HTTP, streamed, handles large files |
@@ -61,7 +61,7 @@ only). Add `--raw` for compact single-line JSON.
 
 ```bash
 episerve health
-episerve list runs                 # or: datasets-raw | datasets | models
+episerve list runs                 # or: datasets | models
 episerve item show Q1748526042817  # CKAN catalog record
 episerve item list-components Q1748526042817
 episerve item download Q1748526042817 components/output/predictions.tsv \
