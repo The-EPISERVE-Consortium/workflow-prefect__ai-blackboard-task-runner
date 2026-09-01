@@ -90,13 +90,16 @@ if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
 fi
 
 # Same reasoning for the connection vars of the blackboard-communication,
-# episerve-platform-access and doip-fdo-access skills -- pass through
-# whichever of these happen to be set; partial sets just mean the skill's own
-# env-var check reports a real failure inside the session, the same way it
-# would in the K8s job.
+# episerve-platform-access, doip-fdo-access and prefect-run-inspection
+# skills -- pass through whichever of these happen to be set; partial sets
+# just mean the skill's own env-var check reports a real failure inside the
+# session, the same way it would in the K8s job. (PREFECT_API_URL is also
+# injected automatically when this image runs as a Prefect flow-run
+# container; passing it here lets a local run exercise the same skill.)
 for var in MARIADB_HOST BLACKBOARD_DB BLACKBOARD_USER BLACKBOARD_PASSWORD \
            EPISERVE_API_URL EPISERVE_CKAN_URL EPISERVE_DOIP_URL EPISERVE_API_KEY \
-           DOIP_HOST DOIP_PORT DOIP_UPDATE_TOKEN; do
+           DOIP_HOST DOIP_PORT DOIP_UPDATE_TOKEN \
+           PREFECT_API_URL PREFECT_API_KEY; do
   if [ -n "${!var:-}" ]; then
     ENV_ARGS+=(-e "$var=${!var}")
   fi
