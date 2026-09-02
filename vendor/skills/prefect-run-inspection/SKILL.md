@@ -1,6 +1,6 @@
 ---
 name: prefect-run-inspection
-description: Use only when the prompt explicitly asks to inspect / check / review / scan Prefect flow runs, deployments, task runs, or their logs (e.g. "check last night's Prefect runs for problems", "did the blackboard-orchestrator flow fail overnight", "summarise the failed flow runs today"). Not triggered just because PREFECT_API_URL happens to be set. Read-only: never trigger, cancel, retry, pause, or delete anything.
+description: Use only when the prompt explicitly asks to inspect / check / review / scan Prefect flow runs, deployments, task runs, or their logs (e.g. "check last night's Prefect runs for problems", "did the blackboard-orchestrator flow fail overnight", "summarise the failed flow runs today"). Not triggered just because PREFECT_API_URL happens to be set. Read-only -- never trigger, cancel, retry, pause, or delete anything.
 ---
 
 # Prefect run inspection
