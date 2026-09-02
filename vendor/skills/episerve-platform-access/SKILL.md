@@ -64,12 +64,18 @@ episerve health
 episerve list runs                 # or: datasets | models
 episerve item show Q1748526042817  # CKAN catalog record
 episerve item list-components Q1748526042817
-episerve item download Q1748526042817 components/output/predictions.tsv \
+episerve item download Q1748526042817 output/predictions.tsv \
   -o /output/predictions.tsv
 ```
 
 QIDs have the form `Q<unix-ts><3 digits>` -- never invent one; take it from
 prior `list` / `item list-components` output or from the prompt.
+
+The component id for `item download` is exactly what `item
+list-components` returns as `id` -- the FDO `@id` with the leading
+`components/` stripped (e.g. `output/predictions.tsv`, `input/config.json`).
+Passing the un-stripped `components/...` form gets a 404. Always copy the id
+from the listing rather than constructing it.
 
 ## Reads
 
@@ -88,13 +94,23 @@ resources and cannot be undone or dry-run -- never fire one speculatively or
 "to test that it works".
 
 ```bash
-episerve trigger-model-run '{"model_image": "...", "input_path": "lakefs://...", "config": {...}}'
+episerve trigger-model-run '{
+  "model_image": "ghcr.io/the-episerve-consortium/model__prediction__generic__timesfm",
+  "model_tag": "latest",
+  "input_data_files": [["<lakefs:// URI or DOIP retrieve URL>", "input.parquet"]],
+  "config": {"history_length": 512, "prediction_length": 182},
+  "data_transformation_sql": ["SELECT ... FROM df WHERE ..."]
+}'
 ```
 
-(the argument is an inline JSON string or a path to a JSON file). It returns
-`202` with a `run_id`. Confirm a real `run_id` came back (not an error)
-before claiming success, and state it plainly so a follow-up can track it
-with `episerve item show <run_id>`.
+(the argument is an inline JSON string or a path to a JSON file). `model_image`,
+`input_data_files` (a list of `[source_uri, target_filename]` pairs), and `config`
+(a JSON object -- the API serializes it to `config_json` for the flow) are
+required; `model_tag` and `data_transformation_sql` are optional. It returns
+`202` with a `run_id` (the Prefect flow-run UUID). Confirm a real `run_id` came
+back (not an error) before claiming success, and state it plainly. The run
+appears in the catalog only after it finishes -- a follow-up can find it with
+`episerve list runs`.
 
 ## Verifying
 
