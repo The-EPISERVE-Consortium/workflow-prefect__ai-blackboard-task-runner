@@ -72,11 +72,12 @@ model__...` string -> `model_image`), `docker_tag` (-> `model_tag`), and
 `git_repo`. Take these from the prompt or this list -- never invent an
 image name.
 
-**Config keys are model-specific -- never guess them.** Get them from:
-- the model repo (`git_repo`)'s `fdo.json` -- `additionalProperty` lists
-  each parameter, whether it is required, and its default -- or its
-  `README.md`
-- the platform's model notes
+**Config keys are model-specific -- never guess them.** The source of truth
+is the model repo (`git_repo`)'s `fdo.json`: `additionalProperty` lists each
+parameter with `name`, `valueRequired`, `minValue`/`maxValue`, and `value`
+(the default). Before triggering, check your `config` object has every
+`valueRequired` key and that values sit within the declared bounds. The
+model's `README.md` and the platform notes render the same table.
 
 Known models:
 - `model__prediction__generic__timesfm` -- `history_length` (req),
