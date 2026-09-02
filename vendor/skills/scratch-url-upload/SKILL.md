@@ -29,33 +29,39 @@ curl -sS -f \
 - The response body *is* the URL (plain text, nothing to parse out) --
   verify the response actually looks like a URL (starts with
   `https://litterbox.catbox.moe/` or, for the fallback below,
-  `https://files.catbox.moe/`) before treating the upload as successful.
+  `https://0x0.st/`) before treating the upload as successful.
   A non-URL response or a failed `curl` call is a real failure -- try the
   fallback, then report if that also fails.
 
-## Fallback: catbox (permanent) when litterbox is blocked
+## Fallback: 0x0.st when litterbox is blocked
 
 litterbox sits behind a BunkerWeb WAF that has been observed to block the
 upload endpoint for whole client IP ranges -- `curl -f` fails with HTTP 500
 and the body is an HTML WAF challenge page rather than a URL (a tiny test
 file fails the same way, so it is not a size/content issue). When that
-happens, fall back to the sibling service from the same provider,
-`catbox.moe/user/api.php` -- same API shape, different WAF posture:
+happens, fall back to `0x0.st` (The Null Pointer) -- also free, no-signup,
+plain-`curl`, and **still auto-expiring** so there is nothing to clean up:
 
 ```bash
 curl -sS -f \
-  -F "reqtype=fileupload" \
-  -F "fileToUpload=@/output/report.md" \
-  https://catbox.moe/user/api.php
+  -F "file=@/output/report.md" \
+  -F "expires=72" \
+  https://0x0.st
 ```
 
-- No `time` parameter -- **catbox hosts are permanent**. The file stays up
-  until someone deletes it manually (which needs a userhash you don't have),
-  so there is nothing to clean up but also no automatic expiry. Say so in
-  your summary: the link is a permanent public URL, not a scratch one.
-- Response body is again the bare URL (`https://files.catbox.moe/<id>.<ext>`).
+- `expires` is in **hours** (any value <= 1e6; larger values are read as a
+  UNIX millisecond timestamp). Pass the same window you would have given
+  litterbox -- default `72`, and unlike litterbox 0x0.st will accept a
+  larger number if the prompt asks for one.
+- Without `expires`, 0x0.st still deletes the file on its own: retention
+  scales with size from ~30 days (large) down to ~365 days (tiny). It is
+  never permanent -- but pass `expires` anyway so the window is explicit.
+- Response body is the bare URL (`https://0x0.st/<id>.<ext>`); the same
+  URL-shape check applies.
+- If 0x0.st answers `403` with a "user agent ... blocked" body, retry once
+  with an explicit `-A "scratch-url-upload/1.0"`.
 - Only reach for this after litterbox has actually failed -- don't default
-  to the permanent host.
+  to it.
 - Upload the file the prompt actually asked for -- not every file sitting in
   `/output`.
 - This host is public and unauthenticated: anyone with the URL can read the
