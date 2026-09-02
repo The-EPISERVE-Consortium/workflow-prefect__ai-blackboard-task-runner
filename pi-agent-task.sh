@@ -48,6 +48,8 @@ $(cat /opt/skills/doip-fdo-access/SKILL.md)
 
 $(cat /opt/skills/prefect-run-inspection/SKILL.md)
 
+$(cat /opt/skills/forecast-model-run/SKILL.md)
+
 ---
 
 $PROMPT"
@@ -66,7 +68,7 @@ pi --provider "$PROVIDER" --model "$MODEL" \
    --skill /opt/skills/discord-delivery --skill /opt/skills/scratch-url-upload \
    --skill /opt/skills/blackboard-communication --skill /opt/skills/github-pr \
    --skill /opt/skills/episerve-platform-access --skill /opt/skills/doip-fdo-access \
-   --skill /opt/skills/prefect-run-inspection \
+   --skill /opt/skills/prefect-run-inspection --skill /opt/skills/forecast-model-run \
    --mode json -p "$FULL_PROMPT" < /dev/null
 
 python3 /opt/pi-trace-extension/extensions/trace/trace_to_html.py >&2 || true

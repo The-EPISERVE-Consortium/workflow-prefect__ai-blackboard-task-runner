@@ -90,16 +90,18 @@ COPY vendor/pi-trace-extension /opt/pi-trace-extension
 # PDF engine flag, don't guess paths/fabricate content), the code-analysis
 # report structure (one supported task among others, not the only one),
 # Discord delivery, scratch-URL upload, blackboard publication, opening a PR,
-# reaching the live EPISERVE platform / DOIP server, and read-only inspection
-# of Prefect flow runs. Everything except harness-conventions and
-# code-analysis-report is entirely the model's own decision -- driven by
-# whether the prompt explicitly asks for it, not by which env vars happen to
-# be set. All nine are always force-loaded by pi-agent-task.sh (their full
-# content is concatenated directly into the prompt, not left to pi's
-# on-demand skill discovery, which the model doesn't reliably trigger on its
-# own). The episerve-platform-access and doip-fdo-access skills shell out to
-# the `episerve` / `episerve-doip-cli` binaries installed above;
-# prefect-run-inspection uses the `prefect` CLI installed via requirements.txt.
+# reaching the live EPISERVE platform / DOIP server, read-only inspection
+# of Prefect flow runs, and running a forecast model end to end. Everything
+# except harness-conventions and code-analysis-report is entirely the
+# model's own decision -- driven by whether the prompt explicitly asks for
+# it, not by which env vars happen to be set. All ten are always
+# force-loaded by pi-agent-task.sh (their full content is concatenated
+# directly into the prompt, not left to pi's on-demand skill discovery,
+# which the model doesn't reliably trigger on its own). The
+# episerve-platform-access, doip-fdo-access and forecast-model-run skills
+# shell out to the `episerve` / `episerve-doip-cli` binaries installed
+# above; prefect-run-inspection and forecast-model-run use the `prefect`
+# CLI installed via requirements.txt.
 COPY vendor/skills/harness-conventions /opt/skills/harness-conventions
 COPY vendor/skills/code-analysis-report /opt/skills/code-analysis-report
 COPY vendor/skills/discord-delivery /opt/skills/discord-delivery
@@ -109,6 +111,7 @@ COPY vendor/skills/github-pr /opt/skills/github-pr
 COPY vendor/skills/episerve-platform-access /opt/skills/episerve-platform-access
 COPY vendor/skills/doip-fdo-access /opt/skills/doip-fdo-access
 COPY vendor/skills/prefect-run-inspection /opt/skills/prefect-run-inspection
+COPY vendor/skills/forecast-model-run /opt/skills/forecast-model-run
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY pi-agent-task.sh /usr/local/bin/pi-agent-task.sh
