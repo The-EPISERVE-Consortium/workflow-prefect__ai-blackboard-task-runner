@@ -42,7 +42,7 @@ skipping the write.
 | `topic` | **you** | Short, stable label for what kind of result this is (see below) |
 | `post_type` | **you** | Always `'someone_take_over'` for a row this skill writes -- see below |
 | `prompt` | **you** | The exact task prompt you were given -- see below |
-| `state` | orchestrator only | `waiting` \| `dispatching_run` \| `waiting_for_next_periodic_run` \| `resolved` -- always starts `waiting`; never set this yourself |
+| `state` | orchestrator only | `waiting` \| `dispatching_run` \| `running` \| `waiting_for_next_periodic_run` \| `resolved` \| `failed` -- always starts `waiting`; never set this yourself |
 | `finding` | **you** | The actual payload -- markdown, JSON, or plain text, whatever the result naturally is |
 | `trace` | `pi-agent-task.sh`, automatic | This session's `trace.html`, attached to your row after you finish -- see below. Never set this yourself; it doesn't exist yet while you're running (see below). |
 | `created_at` | auto | |
