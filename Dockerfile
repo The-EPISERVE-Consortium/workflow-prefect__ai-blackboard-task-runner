@@ -113,6 +113,15 @@ COPY vendor/skills/doip-fdo-access /opt/skills/doip-fdo-access
 COPY vendor/skills/prefect-run-inspection /opt/skills/prefect-run-inspection
 COPY vendor/skills/forecast-model-run /opt/skills/forecast-model-run
 
+# Interactive `pi` (a human running pi in this container) never goes through
+# pi-agent-task.sh, so it gets none of the force-loaded skill bodies -- skills
+# are then progressive-disclosure and harness-conventions is only ever a
+# description string. This context file is concatenated into pi's system
+# prompt at startup on every invocation, giving the interactive path the
+# same always-on rules (verify outputs, chart style, the completion marker)
+# and pointing it at the mandatory skills to read in full.
+COPY vendor/pi-config/AGENTS.md /root/.pi/agent/AGENTS.md
+
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY pi-agent-task.sh /usr/local/bin/pi-agent-task.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/pi-agent-task.sh
