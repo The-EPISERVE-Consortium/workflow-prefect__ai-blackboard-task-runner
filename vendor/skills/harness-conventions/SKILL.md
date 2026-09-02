@@ -124,6 +124,58 @@ fig.autofmt_xdate(rotation=45, ha="right")
 Widen the `interval` (or switch to `MonthLocator`) for longer spans -- aim
 for roughly 6-12 ticks across the axis, never one per data point.
 
+### Polished charts (default style)
+
+Charts should look finished by default, not like bare "line on white"
+quickies. Use this house style -- it is pure matplotlib, no seaborn
+dependency.
+
+Set the theme once via `rcParams`, before building the figure:
+
+```python
+import matplotlib.pyplot as plt
+plt.rcParams.update({
+    "font.family": "DejaVu Sans",
+    "axes.edgecolor": "#c9c9c9",
+    "axes.linewidth": 1.0,
+    "axes.titlesize": 15,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 11,
+    "legend.fontsize": 10,
+    "xtick.labelsize": 10,
+    "ytick.labelsize": 10,
+})
+```
+
+- **Palette** -- high-contrast, colorblind-friendly on white: `#0b7285`
+  teal, `#e8590c` orange, `#2ca02c` green, `#7b2cbf` purple, `#1f77b4`
+  blue, `#d62728` red. Keep the same colour per series across related
+  charts so runs can be compared at a glance.
+- **Grid & spines** -- white figure/axes face; light-grey horizontal
+  gridlines *behind* the data (`ax.set_axisbelow(True)` then
+  `ax.grid(axis="y", color="#e9e9e9", lw=0.8)`); hide the top spine, keep
+  left/bottom subtle.
+- **Titles** -- bold main title via `fig.suptitle(...)`, plus a smaller
+  grey `ax.set_title(...)` subtitle naming the series, units, and
+  aggregation.
+- **Series shape** -- `ax.fill_between(..., alpha=0.12)` under each line.
+- **Y-axis labels** -- colour-matched to their series and
+  `fontweight="bold"`.
+- **Annotations** -- mark peaks/events with `ax.annotate(...)` and a thin
+  arrow carrying the date and value.
+- **Source footnote** -- `fig.text(0.01, 0.01, "Source: ...", fontsize=7.5,
+  color="#888888")`, and leave room with
+  `fig.tight_layout(rect=[0, 0.03, 1, 0.97])`.
+- **Dual axes** -- when two series have different units, put one on a
+  `twinx()` axis, fill under both, label *both* y-axes with their units
+  (e.g. incidence per 100,000 vs RNA copies/L), and use one combined
+  legend at upper left.
+
+The size/DPI and time-axis rules above still apply (`figsize=(6.5, 4)`
+minimum, `dpi=150`, `bbox_inches="tight"`, sparse date locators), and
+verify `plot.png` is a real non-empty PNG before embedding or uploading
+it.
+
 ## Running a repo's own test suite
 
 `python3` and `pip` are both installed, and `pip install <packages>` works
