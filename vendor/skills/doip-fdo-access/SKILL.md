@@ -80,7 +80,7 @@ $DOIP --action versions --object-id Q1748526042817
 
 # a component at a specific commit  (--output is REQUIRED in --force-json-output mode)
 $DOIP --action retrieve --object-id Q1748526042817 \
-  --component components/output/predictions.tsv \
+  --component output/predictions.tsv \
   --version <commit-id> --output /output/predictions.tsv
 ```
 
@@ -89,10 +89,15 @@ $DOIP --action retrieve --object-id Q1748526042817 \
 "media_type", "bytes"}`; `update` / `invoke` -> `{"metadata_blocks": [...]}`;
 `hello` / `list_ops` / `purge` -> the raw response object.
 
-Component IDs are **exact storage names -- no extension is added
-automatically**. A component `retrieve` here requires `--output` (binary
-content can't share stdout with the envelope); for a plain latest-version
-download prefer `episerve-platform-access` (it streams).
+A component id is the FDO `fdo:hasComponent` `@id` with the leading
+`components/` stripped -- e.g. `output/predictions.tsv`,
+`input/config.json`. This is exactly what `episerve item list-components`
+returns as `id`; take it from there or from a metadata `retrieve` rather
+than hand-building it (the un-stripped `components/...` form 404s), and no
+extension is added automatically. A component `retrieve` here requires
+`--output` (binary content can't share stdout with the envelope); for a
+plain latest-version download prefer `episerve-platform-access` (it
+streams).
 
 ## Reads
 
@@ -108,7 +113,7 @@ FDO in lakeFS -- there is no dry-run.
 
 ```bash
 $DOIP --action update --object-id Q1748526042817 \
-  --component components/output/predictions.tsv \
+  --component output/predictions.tsv \
   --input /output/predictions.tsv --media-type text/tab-separated-values
 ```
 
