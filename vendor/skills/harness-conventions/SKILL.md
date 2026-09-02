@@ -88,6 +88,8 @@ Requirements for `report.md` to render correctly with this template:
   the body (the title from frontmatter already renders as the page title).
 - This template is single-column -- do not add your own multi-column CSS or
   `column-count` styling.
+- Do not pass a second `--css` or edit `report.css`. The template already
+  constrains embedded images to the page width (`img { max-width: 100% }`).
 
 **Only** use `--pdf-engine=wkhtmltopdf` (with no `--css`) for a plain,
 unstyled PDF conversion when the task explicitly isn't "a report" -- e.g.
@@ -95,6 +97,16 @@ converting an arbitrary existing markdown file as-is with no styling
 requirement. `wkhtmltopdf` does not support the CSS Paged Media features
 (`@page` margin boxes, running headers) that `report.css` relies on, so it
 must not be combined with `--css=/opt/pandoc-assets/report.css`.
+
+### Charts in a report
+
+`matplotlib` and `pandas` (+ `pyarrow` for parquet) are installed -- do not
+`pip install` a plotting stack. Build the chart with matplotlib, size it for
+the A4 content box at creation rather than relying on the CSS to shrink it
+(`fig, ax = plt.subplots(figsize=(6.5, 4)); ... fig.savefig("plot.png",
+dpi=150, bbox_inches="tight")`), then reference it from `report.md` as
+`![caption](plot.png)`. Verify `plot.png` exists and is non-empty before
+building the PDF.
 
 ## Running a repo's own test suite
 

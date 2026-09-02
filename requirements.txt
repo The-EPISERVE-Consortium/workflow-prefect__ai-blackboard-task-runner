@@ -1,3 +1,11 @@
 prefect>=3.0
 pyyaml
 pymysql
+
+# Not used by the flow itself -- baked in so report-generating runs don't
+# pip-install a plotting stack every time (see harness-conventions "Generating
+# PDFs"). matplotlib for static PNG charts, pandas + pyarrow for reading the
+# TSV/parquet data behind them.
+matplotlib
+pandas
+pyarrow

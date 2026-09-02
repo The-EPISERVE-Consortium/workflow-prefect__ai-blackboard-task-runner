@@ -125,3 +125,23 @@ th, td {
   vertical-align: top;
   overflow-wrap: break-word;
 }
+
+/* Without this, weasyprint places an embedded PNG at its raw pixel size
+   (96 CSS px/in), which overflows the A4 content box for anything wider
+   than ~640 px. Constrain images to the column and keep aspect ratio. */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+figure {
+  margin: 1.2em 0;
+  text-align: center;
+  break-inside: avoid;
+}
+
+figure figcaption {
+  font-size: 0.85em;
+  color: #444;
+  margin-top: 0.4em;
+}
