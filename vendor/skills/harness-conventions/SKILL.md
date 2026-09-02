@@ -108,6 +108,22 @@ dpi=150, bbox_inches="tight")`), then reference it from `report.md` as
 `![caption](plot.png)`. Verify `plot.png` exists and is non-empty before
 building the PDF.
 
+**Time axis.** A date x-axis with matplotlib's default tick placement and a
+long `%Y-%m-%d` format produces overlapping, unreadable labels once the
+series spans more than a few weeks -- this is what made the x-labels collide
+in earlier plots. Do not rely on the default. Instead set a sparse locator, a
+short date format, and rotate the labels right-aligned:
+
+```python
+import matplotlib.dates as mdates
+ax.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MO, interval=2))
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %y"))
+fig.autofmt_xdate(rotation=45, ha="right")
+```
+
+Widen the `interval` (or switch to `MonthLocator`) for longer spans -- aim
+for roughly 6-12 ticks across the axis, never one per data point.
+
 ## Running a repo's own test suite
 
 `python3` and `pip` are both installed, and `pip install <packages>` works
