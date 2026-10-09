@@ -39,7 +39,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 # `--help` calls are a build-time smoke test that the binary actually runs on
 # this base image (catches a glibc mismatch here rather than mid-run).
 ARG EPISERVE_CLIENT_VERSION=v0.1.13
-ARG EPISERVE_DOIP_CLI_VERSION=v0.0.5
+ARG EPISERVE_DOIP_CLI_VERSION=v0.0.6
 RUN curl -fsSL -o /usr/local/bin/episerve \
         "https://github.com/The-EPISERVE-Consortium/episerve_client/releases/download/${EPISERVE_CLIENT_VERSION}/episerve-client-linux" \
     && curl -fsSL -o /usr/local/bin/episerve-doip-cli \
