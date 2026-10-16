@@ -103,14 +103,20 @@ COPY vendor/pi-trace-extension /opt/pi-trace-extension
 # above; prefect-run-inspection and forecast-model-run use the `prefect`
 # CLI installed via requirements.txt.
 # episerve-platform-access and doip-fdo-access are general (usable from Claude,
-# Codex, ...) and live in the public episerve_skills repo, cloned here pinned
-# to a tag. The harness-specific skills below stay in vendor/skills; both end
-# up side by side in /opt/skills, which is what pi-agent-task.sh expects.
-ARG SKILLS_REF=v0.1.0
+# Codex, ...) and live in the public episerve_skills repo, cloned here at its
+# latest state (SKILLS_REF: branch or tag, default main). The harness-specific
+# skills below stay in vendor/skills; both end up side by side in /opt/skills,
+# which is what pi-agent-task.sh expects. Docker caches this layer while the
+# args are unchanged, so to pick up new skills rebuild with --no-cache or pass
+# a new --build-arg SKILLS_CACHEBUST=$(date +%s). The commit that was cloned
+# is recorded in /opt/skills/.episerve_skills_ref.
+ARG SKILLS_REF=main
+ARG SKILLS_CACHEBUST=0
 RUN git clone --depth 1 --branch "${SKILLS_REF}" \
         https://github.com/The-EPISERVE-Consortium/episerve_skills /tmp/episerve_skills \
     && mkdir -p /opt/skills \
     && cp -r /tmp/episerve_skills/skills/* /opt/skills/ \
+    && git -C /tmp/episerve_skills rev-parse HEAD > /opt/skills/.episerve_skills_ref \
     && rm -rf /tmp/episerve_skills
 COPY vendor/skills/harness-conventions /opt/skills/harness-conventions
 COPY vendor/skills/code-analysis-report /opt/skills/code-analysis-report
