@@ -103,18 +103,16 @@ COPY vendor/pi-trace-extension /opt/pi-trace-extension
 # above; prefect-run-inspection and forecast-model-run use the `prefect`
 # CLI installed via requirements.txt.
 # episerve-platform-access and doip-fdo-access are general (usable from Claude,
-# Codex, ...) and live in the public episerve_skills repo, cloned here at its
-# latest state (SKILLS_REF: branch or tag, default main). The harness-specific
+# Codex, ...) and live in the public episerve_skills repo, added here at the
+# latest commit of SKILLS_REF (branch or tag, default main). The harness-specific
 # skills below stay in vendor/skills; both end up side by side in /opt/skills,
-# which is what pi-agent-task.sh expects. Docker caches this layer while the
-# args are unchanged, so to pick up new skills rebuild with --no-cache or pass
-# a new --build-arg SKILLS_CACHEBUST=$(date +%s). The commit that was cloned
-# is recorded in /opt/skills/.episerve_skills_ref.
+# which is what pi-agent-task.sh expects. BuildKit resolves a git ADD to a
+# commit on every build, so this layer is rebuilt exactly when SKILLS_REF has
+# moved and cached otherwise. The commit is recorded in
+# /opt/skills/.episerve_skills_ref.
 ARG SKILLS_REF=main
-ARG SKILLS_CACHEBUST=0
-RUN git clone --depth 1 --branch "${SKILLS_REF}" \
-        https://github.com/The-EPISERVE-Consortium/episerve_skills /tmp/episerve_skills \
-    && mkdir -p /opt/skills \
+ADD --keep-git-dir=true https://github.com/The-EPISERVE-Consortium/episerve_skills.git#${SKILLS_REF} /tmp/episerve_skills
+RUN mkdir -p /opt/skills \
     && cp -r /tmp/episerve_skills/skills/* /opt/skills/ \
     && git -C /tmp/episerve_skills rev-parse HEAD > /opt/skills/.episerve_skills_ref \
     && rm -rf /tmp/episerve_skills
