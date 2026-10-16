@@ -38,7 +38,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 # (public repos, no auth needed). Pinned by tag; bump the ARG to move. The
 # `--help` calls are a build-time smoke test that the binary actually runs on
 # this base image (catches a glibc mismatch here rather than mid-run).
-ARG EPISERVE_CLIENT_VERSION=v0.1.13
+ARG EPISERVE_CLIENT_VERSION=v0.1.15
 ARG EPISERVE_DOIP_CLI_VERSION=v0.0.6
 RUN curl -fsSL -o /usr/local/bin/episerve \
         "https://github.com/The-EPISERVE-Consortium/episerve_client/releases/download/${EPISERVE_CLIENT_VERSION}/episerve-client-linux" \
@@ -102,7 +102,7 @@ COPY vendor/pi-trace-extension /opt/pi-trace-extension
 # shell out to the `episerve` / `episerve-doip-cli` binaries installed
 # above; prefect-run-inspection and forecast-model-run use the `prefect`
 # CLI installed via requirements.txt.
-# episerve-platform-access and doip-fdo-access are general (usable from Claude,
+# episerve-platform-access, episerve-benchmarks and doip-fdo-access are general (usable from Claude,
 # Codex, ...) and live in the public episerve_skills repo, added here at the
 # latest commit of SKILLS_REF (branch or tag, default main). The harness-specific
 # skills below stay in vendor/skills; both end up side by side in /opt/skills,

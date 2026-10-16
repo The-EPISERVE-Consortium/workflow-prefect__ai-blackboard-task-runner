@@ -46,6 +46,8 @@ $(cat /opt/skills/episerve-platform-access/SKILL.md)
 
 $(cat /opt/skills/doip-fdo-access/SKILL.md)
 
+$(cat /opt/skills/episerve-benchmarks/SKILL.md)
+
 $(cat /opt/skills/prefect-run-inspection/SKILL.md)
 
 $(cat /opt/skills/forecast-model-run/SKILL.md)
@@ -68,6 +70,7 @@ pi --provider "$PROVIDER" --model "$MODEL" \
    --skill /opt/skills/discord-delivery --skill /opt/skills/scratch-url-upload \
    --skill /opt/skills/blackboard-communication --skill /opt/skills/github-pr \
    --skill /opt/skills/episerve-platform-access --skill /opt/skills/doip-fdo-access \
+   --skill /opt/skills/episerve-benchmarks \
    --skill /opt/skills/prefect-run-inspection --skill /opt/skills/forecast-model-run \
    --mode json -p "$FULL_PROMPT" < /dev/null
 
