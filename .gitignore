@@ -3,3 +3,4 @@ run-output/
 __pycache__/
 *.pyc
 .pytest_cache/
+.claude/settings.local.json

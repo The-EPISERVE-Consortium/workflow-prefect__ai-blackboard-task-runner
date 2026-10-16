@@ -102,14 +102,22 @@ COPY vendor/pi-trace-extension /opt/pi-trace-extension
 # shell out to the `episerve` / `episerve-doip-cli` binaries installed
 # above; prefect-run-inspection and forecast-model-run use the `prefect`
 # CLI installed via requirements.txt.
+# episerve-platform-access and doip-fdo-access are general (usable from Claude,
+# Codex, ...) and live in the public episerve_skills repo, cloned here pinned
+# to a tag. The harness-specific skills below stay in vendor/skills; both end
+# up side by side in /opt/skills, which is what pi-agent-task.sh expects.
+ARG SKILLS_REF=v0.1.0
+RUN git clone --depth 1 --branch "${SKILLS_REF}" \
+        https://github.com/The-EPISERVE-Consortium/episerve_skills /tmp/episerve_skills \
+    && mkdir -p /opt/skills \
+    && cp -r /tmp/episerve_skills/skills/* /opt/skills/ \
+    && rm -rf /tmp/episerve_skills
 COPY vendor/skills/harness-conventions /opt/skills/harness-conventions
 COPY vendor/skills/code-analysis-report /opt/skills/code-analysis-report
 COPY vendor/skills/discord-delivery /opt/skills/discord-delivery
 COPY vendor/skills/scratch-url-upload /opt/skills/scratch-url-upload
 COPY vendor/skills/blackboard-communication /opt/skills/blackboard-communication
 COPY vendor/skills/github-pr /opt/skills/github-pr
-COPY vendor/skills/episerve-platform-access /opt/skills/episerve-platform-access
-COPY vendor/skills/doip-fdo-access /opt/skills/doip-fdo-access
 COPY vendor/skills/prefect-run-inspection /opt/skills/prefect-run-inspection
 COPY vendor/skills/forecast-model-run /opt/skills/forecast-model-run
 
