@@ -16,8 +16,13 @@ task (via the `code-analysis-report` skill) among others, not the only one.
 ## Build
 
 ```bash
-docker build -t pi-agent .
+./build.sh        # latest pi, latest episerve / episerve-doip-cli releases, latest skills
 ```
+
+A plain `docker build -t pi-agent .` reuses cached layers, so it can keep an older pi / CLI release;
+`build.sh` passes a fresh `PI_BUILD_EPOCH`, which rebuilds the `pi` layer and everything after it
+(the two CLI binaries from `releases/latest` and the skills from `episerve_skills`). The installed
+CLI versions are listed in `/opt/cli-versions.txt` and the skills commit in `/opt/skills/.episerve_skills_ref`.
 
 ## Run locally
 

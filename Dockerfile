@@ -32,22 +32,6 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && apt-get update && apt-get install -y --no-install-recommends gh \
     && rm -rf /var/lib/apt/lists/*
 
-# EPISERVE platform + DOIP CLIs -- used by the episerve-platform-access and
-# doip-fdo-access skills to reach the running platform / DOIP server. Each
-# repo publishes a static linux-amd64 PyInstaller binary per GitHub release
-# (public repos, no auth needed). Pinned by tag; bump the ARG to move. The
-# `--help` calls are a build-time smoke test that the binary actually runs on
-# this base image (catches a glibc mismatch here rather than mid-run).
-ARG EPISERVE_CLIENT_VERSION=v0.1.15
-ARG EPISERVE_DOIP_CLI_VERSION=v0.0.6
-RUN curl -fsSL -o /usr/local/bin/episerve \
-        "https://github.com/The-EPISERVE-Consortium/episerve_client/releases/download/${EPISERVE_CLIENT_VERSION}/episerve-client-linux" \
-    && curl -fsSL -o /usr/local/bin/episerve-doip-cli \
-        "https://github.com/The-EPISERVE-Consortium/episerve_doip_server/releases/download/${EPISERVE_DOIP_CLI_VERSION}/episerve-doip-cli-linux" \
-    && chmod +x /usr/local/bin/episerve /usr/local/bin/episerve-doip-cli \
-    && /usr/local/bin/episerve --help >/dev/null \
-    && /usr/local/bin/episerve-doip-cli --help >/dev/null
-
 # Debian's pip refuses bare installs outside a venv (PEP 668) by default.
 # The container is fully disposable (/workspace isn't persisted, see
 # run-prompt.sh), so there's no system-Python-breakage risk worth the
@@ -66,11 +50,32 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.
 COPY vendor/pandoc-assets /opt/pandoc-assets
 
 # Intentionally unpinned -- always take the latest pi harness at build time.
-# The cache-bust ARG forces this layer (and only this layer onward) to rebuild
-# even when nothing else changed: `docker build --build-arg PI_BUILD_EPOCH=$(date +%s)`.
+# The cache-bust ARG forces this layer (and everything after it, i.e. the EPISERVE
+# CLIs and the skills) to rebuild even when nothing else changed: `docker build --build-arg PI_BUILD_EPOCH=$(date +%s)`.
 ARG PI_BUILD_EPOCH=0
 RUN npm install -g @earendil-works/pi-coding-agent@latest \
     && pi --help >/dev/null
+
+# EPISERVE platform + DOIP CLIs -- used by the episerve-platform-access,
+# episerve-benchmarks and doip-fdo-access skills to reach the running platform /
+# DOIP server. Each repo publishes a static linux-amd64 PyInstaller binary per
+# GitHub release (public repos, no auth needed). Intentionally unpinned: the
+# `latest` release is taken at build time. This layer sits behind the
+# PI_BUILD_EPOCH layer above, so the same epoch bump (build.sh, CI) refreshes
+# pi and both CLIs; the resolved versions end up in /opt/cli-versions.txt. The
+# `--help` calls are a build-time smoke test that the binary actually runs on
+# this base image (catches a glibc mismatch here rather than mid-run).
+RUN curl -fsSL -o /usr/local/bin/episerve \
+        "https://github.com/The-EPISERVE-Consortium/episerve_client/releases/latest/download/episerve-client-linux" \
+    && curl -fsSL -o /usr/local/bin/episerve-doip-cli \
+        "https://github.com/The-EPISERVE-Consortium/episerve_doip_server/releases/latest/download/episerve-doip-cli-linux" \
+    && chmod +x /usr/local/bin/episerve /usr/local/bin/episerve-doip-cli \
+    && /usr/local/bin/episerve --help >/dev/null \
+    && /usr/local/bin/episerve-doip-cli --help >/dev/null \
+    && for r in episerve_client episerve_doip_server; do \
+         echo "$r $(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/The-EPISERVE-Consortium/$r/releases/latest | sed 's|.*/||')"; \
+       done > /opt/cli-versions.txt
+
 
 # Vendored, patched fork of v2nic/pi-ollama-provider: talks to Ollama's native
 # /api/chat (respects num_ctx, unlike the OpenAI-compat route which silently

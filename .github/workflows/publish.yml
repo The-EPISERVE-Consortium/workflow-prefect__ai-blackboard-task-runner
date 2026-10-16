@@ -32,6 +32,8 @@ jobs:
           push: false
           load: true
           tags: ${{ env.IMAGE_NAME }}:test
+          build-args: |
+            PI_BUILD_EPOCH=${{ github.run_id }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -99,5 +101,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PI_BUILD_EPOCH=${{ github.run_id }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
