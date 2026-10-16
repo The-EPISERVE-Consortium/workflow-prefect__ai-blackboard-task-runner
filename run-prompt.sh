@@ -90,7 +90,7 @@ if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
 fi
 
 # Same reasoning for the connection vars of the blackboard-communication,
-# episerve-platform-access, doip-fdo-access and prefect-run-inspection
+# episerve-data-access, episerve-model-runs, episerve-benchmarks, doip-fdo-access and prefect-run-inspection
 # skills -- pass through whichever of these happen to be set; partial sets
 # just mean the skill's own env-var check reports a real failure inside the
 # session, the same way it would in the K8s job. (PREFECT_API_URL is also

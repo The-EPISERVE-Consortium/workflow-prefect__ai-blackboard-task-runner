@@ -6,7 +6,8 @@
 #
 # Delivery and platform access are the agent's own decision, driven by skills
 # force-loaded below (discord-delivery, scratch-url-upload,
-# blackboard-communication, episerve-platform-access, doip-fdo-access) -- e.g.
+# blackboard-communication, episerve-data-access, episerve-model-runs,
+# episerve-benchmarks, doip-fdo-access) -- e.g.
 # if the prompt asks for Discord delivery, pi itself posts the file as one of
 # its own tool calls, not this script. This script only handles what's
 # generic across every task: propagating pi's own exit code (via `set -e`,
@@ -30,31 +31,25 @@ OUTPUT_DIR="${OUTPUT_DIR:-/output}"
 
 mkdir -p "$OUTPUT_DIR"
 
-FULL_PROMPT="$(cat /opt/skills/harness-conventions/SKILL.md)
+# Every skill under /opt/skills is force-loaded: the two core ones first (in
+# this order), then the rest alphabetically. Adding or removing a skill (in
+# vendor/skills or in the episerve_skills repo) needs no change here.
+CORE_SKILLS=(harness-conventions code-analysis-report)
+SKILL_DIRS=()
+for name in "${CORE_SKILLS[@]}"; do SKILL_DIRS+=("/opt/skills/$name"); done
+for dir in /opt/skills/*/; do
+    dir="${dir%/}"
+    case " ${CORE_SKILLS[*]} " in *" $(basename "$dir") "*) continue ;; esac
+    [ -f "$dir/SKILL.md" ] && SKILL_DIRS+=("$dir")
+done
 
-$(cat /opt/skills/code-analysis-report/SKILL.md)
-
-$(cat /opt/skills/discord-delivery/SKILL.md)
-
-$(cat /opt/skills/scratch-url-upload/SKILL.md)
-
-$(cat /opt/skills/blackboard-communication/SKILL.md)
-
-$(cat /opt/skills/github-pr/SKILL.md)
-
-$(cat /opt/skills/episerve-platform-access/SKILL.md)
-
-$(cat /opt/skills/doip-fdo-access/SKILL.md)
-
-$(cat /opt/skills/episerve-benchmarks/SKILL.md)
-
-$(cat /opt/skills/prefect-run-inspection/SKILL.md)
-
-$(cat /opt/skills/forecast-model-run/SKILL.md)
-
----
-
-$PROMPT"
+FULL_PROMPT=""
+SKILL_FLAGS=()
+for dir in "${SKILL_DIRS[@]}"; do
+    FULL_PROMPT+="$(cat "$dir/SKILL.md")"$'\n\n'
+    SKILL_FLAGS+=(--skill "$dir")
+done
+FULL_PROMPT+="---"$'\n\n'"$PROMPT"
 
 # stdin explicitly closed: -p/--print is documented as non-interactive
 # ("process prompt and exit"), so pi should never need stdin -- but nothing
@@ -66,12 +61,7 @@ $PROMPT"
 # forever waiting for input/EOF that never arrives -- with no network
 # activity and no error, indistinguishable from progress from the outside.
 pi --provider "$PROVIDER" --model "$MODEL" \
-   --skill /opt/skills/harness-conventions --skill /opt/skills/code-analysis-report \
-   --skill /opt/skills/discord-delivery --skill /opt/skills/scratch-url-upload \
-   --skill /opt/skills/blackboard-communication --skill /opt/skills/github-pr \
-   --skill /opt/skills/episerve-platform-access --skill /opt/skills/doip-fdo-access \
-   --skill /opt/skills/episerve-benchmarks \
-   --skill /opt/skills/prefect-run-inspection --skill /opt/skills/forecast-model-run \
+   "${SKILL_FLAGS[@]}" \
    --mode json -p "$FULL_PROMPT" < /dev/null
 
 python3 /opt/pi-trace-extension/extensions/trace/trace_to_html.py >&2 || true

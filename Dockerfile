@@ -56,8 +56,8 @@ ARG PI_BUILD_EPOCH=0
 RUN npm install -g @earendil-works/pi-coding-agent@latest \
     && pi --help >/dev/null
 
-# EPISERVE platform + DOIP CLIs -- used by the episerve-platform-access,
-# episerve-benchmarks and doip-fdo-access skills to reach the running platform /
+# EPISERVE platform + DOIP CLIs -- used by the episerve-data-access,
+# episerve-model-runs, episerve-benchmarks and doip-fdo-access skills to reach the running platform /
 # DOIP server. Each repo publishes a static linux-amd64 PyInstaller binary per
 # GitHub release (public repos, no auth needed). Intentionally unpinned: the
 # `latest` release is taken at build time. This layer sits behind the
@@ -103,11 +103,11 @@ COPY vendor/pi-trace-extension /opt/pi-trace-extension
 # force-loaded by pi-agent-task.sh (their full content is concatenated
 # directly into the prompt, not left to pi's on-demand skill discovery,
 # which the model doesn't reliably trigger on its own). The
-# episerve-platform-access, doip-fdo-access and forecast-model-run skills
+# episerve-data-access, episerve-model-runs, episerve-benchmarks, doip-fdo-access and forecast-model-run skills
 # shell out to the `episerve` / `episerve-doip-cli` binaries installed
 # above; prefect-run-inspection and forecast-model-run use the `prefect`
 # CLI installed via requirements.txt.
-# episerve-platform-access, episerve-benchmarks and doip-fdo-access are general (usable from Claude,
+# episerve-data-access, episerve-model-runs, episerve-benchmarks and doip-fdo-access are general (usable from Claude,
 # Codex, ...) and live in the public episerve_skills repo, added here at the
 # latest commit of SKILLS_REF (branch or tag, default main). The harness-specific
 # skills below stay in vendor/skills; both end up side by side in /opt/skills,

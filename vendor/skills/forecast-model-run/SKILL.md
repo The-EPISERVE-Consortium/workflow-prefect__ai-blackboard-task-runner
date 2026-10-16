@@ -1,6 +1,6 @@
 ---
 name: forecast-model-run
-description: Use only when the prompt explicitly asks to run / execute / launch a forecast (prediction) model end to end -- trigger the model-runner, wait for the Kubernetes job, and fetch the resulting predictions (e.g. "run the timesfm model on the COVID incidence dataset and give me the forecast", "launch model__prediction__grippeweb__baseline-nullmodel for a 4-week horizon and download predictions.tsv"). Not triggered by default and not implied by EPISERVE_* env vars being present. For a bare one-shot `trigger-model-run` with no wait/fetch, or for catalog listings, use episerve-platform-access; for read-only inspection of runs that already exist, use prefect-run-inspection.
+description: Use only when the prompt explicitly asks to run / execute / launch a forecast (prediction) model end to end -- trigger the model-runner, wait for the Kubernetes job, and fetch the resulting predictions (e.g. "run the timesfm model on the COVID incidence dataset and give me the forecast", "launch model__prediction__grippeweb__baseline-nullmodel for a 4-week horizon and download predictions.tsv"). Not triggered by default and not implied by EPISERVE_* env vars being present. For a bare one-shot `trigger-model-run` with no wait/fetch, use episerve-model-runs, and for catalog listings episerve-data-access; for read-only inspection of runs that already exist, use prefect-run-inspection.
 ---
 
 # Running a forecast model
@@ -34,12 +34,13 @@ implementation. The contract:
 | You want to... | Skill |
 |---|---|
 | Run a model and get its predictions (trigger + wait + download) | **this skill** |
-| Just fire `trigger-model-run` and return the `run_id`, or list datasets / models / runs, or download a component of an existing run | **episerve-platform-access** |
+| Just fire `trigger-model-run` and return the `run_id`, or look at / fetch the result of an existing run | **episerve-model-runs** |
+| List datasets / models / runs, or download a component of an existing run | **episerve-data-access** |
 | Look at runs that already happened (states, logs) without starting anything | **prefect-run-inspection** |
 | Download a component **at a specific commit**, or an object's version history | **doip-fdo-access** |
 
 This skill *starts* a run (through `episerve trigger-model-run`, the same
-one write `episerve-platform-access` documents) and then uses **read-only**
+one write `episerve-model-runs` documents) and then uses **read-only**
 Prefect calls to wait. It must never mutate anything via Prefect
 (`prefect deployment run`, `... flow-run cancel/retry/delete`) -- the only
 way it launches a run is the `episerve` trigger.
