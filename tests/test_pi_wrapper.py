@@ -34,7 +34,7 @@ def test_environment_and_flags_choose_provider_and_model(tmp_path):
 
 def test_without_a_prompt_or_with_another_option_the_real_pi_starts(tmp_path):
     real = tmp_path / "real-pi"
-    real.write_text(f'#!/bin/sh\nprintf "real:%s|" "$@" > {tmp_path}/real\n')
+    real.write_text(f'#!/bin/sh\nprintf "real:" > {tmp_path}/real; printf "%s|" "$@" >> {tmp_path}/real\n')
     real.chmod(real.stat().st_mode | stat.S_IEXEC)
     for args, expected in (((), "real:|"), (("--provider", "zib", "--model", "m"), "real:--provider|zib|--model|m|"),
                            (("--skill", "/opt/skills", "x"), "real:--skill|/opt/skills|x|"),
