@@ -97,7 +97,7 @@ fi
 # injected automatically when this image runs as a Prefect flow-run
 # container; passing it here lets a local run exercise the same skill.)
 for var in MARIADB_HOST BLACKBOARD_DB BLACKBOARD_USER BLACKBOARD_PASSWORD \
-           EPISERVE_API_URL EPISERVE_CKAN_URL EPISERVE_DOIP_URL EPISERVE_API_KEY \
+           EPISERVE_API_URL EPISERVE_CKAN_URL EPISERVE_DOIP_URL EPISERVE_API_KEY EPISERVE_USERNAME EPISERVE_PASSWORD \
            DOIP_HOST DOIP_PORT DOIP_UPDATE_TOKEN \
            PREFECT_API_URL PREFECT_API_KEY; do
   if [ -n "${!var:-}" ]; then
