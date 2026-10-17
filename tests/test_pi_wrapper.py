@@ -32,11 +32,17 @@ def test_environment_and_flags_choose_provider_and_model(tmp_path):
     assert called == "openrouter|m|task|"
 
 
-def test_no_prompt_or_an_unknown_option_is_refused_without_a_run(tmp_path):
-    for args in ((), ("--skill", "/opt/skills", "x")):
-        result, called = _run(tmp_path, *args)
-        assert result.returncode == 2 and called is None
-        assert "usage: pi" in result.stderr
+def test_without_a_prompt_or_with_another_option_the_real_pi_starts(tmp_path):
+    real = tmp_path / "real-pi"
+    real.write_text(f'#!/bin/sh\nprintf "real:%s|" "$@" > {tmp_path}/real\n')
+    real.chmod(real.stat().st_mode | stat.S_IEXEC)
+    for args, expected in (((), "real:|"), (("--provider", "zib", "--model", "m"), "real:--provider|zib|--model|m|"),
+                           (("--skill", "/opt/skills", "x"), "real:--skill|/opt/skills|x|"),
+                           (("--provider",), "real:--provider|")):
+        (tmp_path / "real").unlink(missing_ok=True)
+        _, called = _run(tmp_path, *args, env={"PI_BIN": str(real)})
+        assert called is None
+        assert (tmp_path / "real").read_text() == expected
 
 
 def test_exit_code_of_the_task_is_passed_on(tmp_path):
