@@ -24,11 +24,11 @@
 # openrouter: requires OPENROUTER_API_KEY.
 #             Model via OPENROUTER_MODEL (default anthropic/claude-sonnet-4.5).
 # zib:        requires ZIB_API_KEY. Genuine OpenAI-compatible endpoint
-#             (LiteLLM in front of vLLM at tllm.science-berlin.de) -- unlike
+#             (LiteLLM in front of vLLM at llm.science-berlin.de) -- unlike
 #             ollama.zib.de's OpenAI-compat facade, this one has no known
 #             num_ctx truncation issue, so the generic "custom" provider path
 #             is used directly rather than a native workaround.
-#             Model via ZIB_MODEL (default zib/konrad-1).
+#             Model via ZIB_MODEL (default zib/konrad-1.1).
 #
 # Console output is filtered through pretty.py, which merges streaming
 # thinking/text deltas into one line per block instead of a flood of
@@ -46,7 +46,7 @@ LLM_PROVIDER="${LLM_PROVIDER:?Set LLM_PROVIDER to 'ollama', 'openrouter', or 'zi
 mkdir -p "$OUTPUT_DIR"
 OUTPUT_ABS="$(realpath "$OUTPUT_DIR")"
 
-# Provider shorthand (LLM_PROVIDER=zib -> LLM_BASE_URL=https://tllm.science-berlin.de
+# Provider shorthand (LLM_PROVIDER=zib -> LLM_BASE_URL=https://llm.science-berlin.de
 # etc.) is expanded by entrypoint.sh itself now, not here -- this only picks
 # the MODEL default/override and does an early fail-fast check so a missing
 # key is caught before spinning up a container, not after. entrypoint.sh
@@ -70,7 +70,7 @@ case "$LLM_PROVIDER" in
     ENV_ARGS=(-e LLM_PROVIDER=openrouter -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY")
     ;;
   zib)
-    MODEL="${ZIB_MODEL:-zib/konrad-1}"
+    MODEL="${ZIB_MODEL:-zib/konrad-1.1}"
     : "${ZIB_API_KEY:?Set ZIB_API_KEY}"
     ENV_ARGS=(-e LLM_PROVIDER=zib -e ZIB_API_KEY="$ZIB_API_KEY" -e LLM_MODEL="$MODEL")
     ;;

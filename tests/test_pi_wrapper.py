@@ -23,7 +23,7 @@ def _run(tmp_path, *args, env=None, exit_code=0):
 def test_prompt_goes_to_pi_agent_task_with_the_default_provider_and_model(tmp_path):
     result, called = _run(tmp_path, "Say", "hello")
     assert result.returncode == 0
-    assert called == "zib|zib/konrad-1|Say hello|"
+    assert called == "zib|zib/konrad-1.1|Say hello|"
 
 
 def test_environment_and_flags_choose_provider_and_model(tmp_path):

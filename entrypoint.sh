@@ -15,9 +15,9 @@ mkdir -p /output
 case "${LLM_PROVIDER:-}" in
   zib)
     : "${ZIB_API_KEY:?Set ZIB_API_KEY for LLM_PROVIDER=zib}"
-    LLM_BASE_URL="${LLM_BASE_URL:-https://tllm.science-berlin.de}"
+    LLM_BASE_URL="${LLM_BASE_URL:-https://llm.science-berlin.de}"
     LLM_API_KEY="${LLM_API_KEY:-$ZIB_API_KEY}"
-    LLM_MODEL="${LLM_MODEL:-zib/konrad-1}"
+    LLM_MODEL="${LLM_MODEL:-zib/konrad-1.1}"
     LLM_PROVIDER_NAME="${LLM_PROVIDER_NAME:-zib}"
     LLM_API_TYPE="${LLM_API_TYPE:-openai-completions}"
     ;;

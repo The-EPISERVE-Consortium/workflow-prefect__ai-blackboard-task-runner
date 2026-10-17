@@ -19,7 +19,7 @@ from pretty import PrettyFormatter
 
 
 @flow
-def agent_task_pipeline(prompt: str, provider: str = "zib", model: str = "zib/konrad-1") -> None:
+def agent_task_pipeline(prompt: str, provider: str = "zib", model: str = "zib/konrad-1.1") -> None:
     """Run pi against `prompt`; pi-agent-task.sh and its skills handle delivery.
 
     Args:

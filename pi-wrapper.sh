@@ -13,7 +13,7 @@ set -euo pipefail
 
 REAL_PI="${PI_BIN:-/usr/local/bin/pi}"
 PROVIDER="${PI_PROVIDER:-${LLM_PROVIDER_NAME:-zib}}"
-MODEL="${PI_MODEL:-${LLM_MODEL:-zib/konrad-1}}"
+MODEL="${PI_MODEL:-${LLM_MODEL:-zib/konrad-1.1}}"
 MODEL="${MODEL%%,*}"
 PROMPT=()
 ARGS=("$@")
