@@ -47,25 +47,20 @@ def _real_pi(tmp_path):
     return real
 
 
-def test_without_a_prompt_or_with_another_option_the_real_pi_starts_with_the_skills(tmp_path):
-    _skills(tmp_path, "zeta", "harness-conventions", "alpha")
+def test_without_a_prompt_or_with_another_option_the_real_pi_starts_with_the_skills_directory(tmp_path):
+    _skills(tmp_path, "alpha", "zeta")
     real = _real_pi(tmp_path)
-    for args, tail in (((), ""), (("--provider", "zib", "--model", "m"), "--provider|zib|--model|m|"),
-                       (("--skill", "/x", "y"), "--skill|/x|y|"), (("--provider",), "--provider|")):
+    skills = f"--skill|{tmp_path}/skills|"
+    cases = (((), skills), (("--provider", "zib", "--model", "m"), skills + "--provider|zib|--model|m|"),
+             (("--provider",), skills + "--provider|"),
+             # the caller chose the skills, or none: nothing is added
+             (("--skill", "/x", "y"), "--skill|/x|y|"), (("--no-skills",), "--no-skills|"),
+             (("-ns", "--provider", "zib"), "-ns|--provider|zib|"))
+    for args, expected in cases:
         (tmp_path / "real").unlink(missing_ok=True)
         _, called = _run(tmp_path, *args, env={"PI_BIN": str(real)})
         assert called is None
-        got = (tmp_path / "real").read_text()
-        assert got.startswith("real:") and got.endswith(tail)
-        if "--skill" in args:
-            assert got == "real:" + tail
-            continue
-        assert f"--skill|{tmp_path}/skills/alpha|--skill|{tmp_path}/skills/zeta|" in got
-        assert got.index("harness-conventions") < got.index("alpha") < got.index("zeta")
-    for args in (("--no-skills",), ("--provider", "zib", "--skill", "/opt/skills")):
-        (tmp_path / "real").unlink()
-        _run(tmp_path, *args, env={"PI_BIN": str(real)})
-        assert (tmp_path / "real").read_text() == "real:" + "".join(f"{a}|" for a in args)
+        assert (tmp_path / "real").read_text() == "real:" + expected
 
 
 def test_interactive_pi_gets_todays_api_token(tmp_path):

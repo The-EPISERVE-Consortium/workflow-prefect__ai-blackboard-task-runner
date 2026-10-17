@@ -18,17 +18,16 @@ MODEL="${MODEL%%,*}"
 PROMPT=()
 ARGS=("$@")
 
-# The real pi, with every skill registered (descriptions up front, bodies read on demand) and today's API token.
+# The real pi, with every skill under $SKILLS_DIR registered (pi scans the directory recursively; descriptions
+# up front, bodies read on demand) and today's API token.
 interactive() {
-    local flags=() dir
+    local flags=()
     # No skills of its own if the caller chose them (--skill ...) or switched them off (--no-skills)
-    case " ${ARGS[*]} " in *" --no-skills "*|*" -ns "*|*" --skill "*) ;; *)
-        collect_skill_dirs
-        for dir in "${SKILL_DIRS[@]}"; do flags+=(--skill "$dir"); done ;;
-    esac
+    case " ${ARGS[*]} " in *" --no-skills "*|*" -ns "*|*" --skill "*) ;; *) flags=(--skill "$SKILLS_DIR") ;; esac
     fetch_episerve_token
     exec "$REAL_PI" "${flags[@]}" "${ARGS[@]}"
 }
+
 while [ $# -gt 0 ]; do
     case "$1" in
         --provider) [ $# -ge 2 ] || interactive; PROVIDER="$2"; shift 2 ;;
