@@ -145,6 +145,7 @@ COPY pretty.py /opt/pretty.py
 # `pi "<prompt>"` typed in the container runs pi-agent-task.sh, plain `pi` stays interactive (see pi-wrapper.sh);
 # /usr/local/sbin precedes the real binary in /usr/local/bin in PATH.
 COPY pi-wrapper.sh /usr/local/sbin/pi
+COPY pi-common.sh /usr/local/lib/pi-common.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/pi-agent-task.sh /usr/local/sbin/pi
 
 WORKDIR /workspace

@@ -58,7 +58,7 @@ jobs:
 
       - name: Check shell script syntax
         run: |
-          for f in entrypoint.sh pi-agent-task.sh pi-wrapper.sh run-prompt.sh; do
+          for f in entrypoint.sh pi-agent-task.sh pi-wrapper.sh pi-common.sh run-prompt.sh; do
             bash -n "$f"
           done
 

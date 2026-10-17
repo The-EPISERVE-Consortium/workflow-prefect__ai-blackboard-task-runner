@@ -31,17 +31,11 @@ OUTPUT_DIR="${OUTPUT_DIR:-/output}"
 
 mkdir -p "$OUTPUT_DIR"
 
-# Every skill under /opt/skills is force-loaded: the two core ones first (in
-# this order), then the rest alphabetically. Adding or removing a skill (in
-# vendor/skills or in the episerve_skills repo) needs no change here.
-CORE_SKILLS=(harness-conventions code-analysis-report)
-SKILL_DIRS=()
-for name in "${CORE_SKILLS[@]}"; do SKILL_DIRS+=("/opt/skills/$name"); done
-for dir in /opt/skills/*/; do
-    dir="${dir%/}"
-    case " ${CORE_SKILLS[*]} " in *" $(basename "$dir") "*) continue ;; esac
-    [ -f "$dir/SKILL.md" ] && SKILL_DIRS+=("$dir")
-done
+# shared helpers: the skill list and the EPISERVE API token (also used by the interactive `pi`)
+. "${PI_COMMON:-/usr/local/lib/pi-common.sh}"
+
+# Every skill under /opt/skills is force-loaded (core ones first, see pi-common.sh).
+collect_skill_dirs
 
 FULL_PROMPT=""
 SKILL_FLAGS=()
@@ -51,22 +45,7 @@ for dir in "${SKILL_DIRS[@]}"; do
 done
 FULL_PROMPT+="---"$'\n\n'"$PROMPT"
 
-# EPISERVE access: the API token is valid for one day, so it cannot be a static secret. If the run has
-# the credentials of the agent's service user (EPISERVE_USERNAME / EPISERVE_PASSWORD, from the sealed secret
-# episerve-agent-credentials) and no token yet, fetch today's token for the skills. Best-effort: without it
-# reads still work and the skills report the 401 on a write.
-if [ -z "${EPISERVE_API_KEY:-}" ] && [ -n "${EPISERVE_USERNAME:-}" ] && [ -n "${EPISERVE_PASSWORD:-}" ]; then
-    EPISERVE_API_KEY=$(jq -n --arg u "$EPISERVE_USERNAME" --arg p "$EPISERVE_PASSWORD" '{username:$u,password:$p}' \
-        | curl -fsS -m 20 -X POST "${EPISERVE_API_URL:-https://api.episerve.zib.de}/auth/token" \
-              -H "Content-Type: application/json" -d @- | jq -r .token) || EPISERVE_API_KEY=""
-    if [ -n "$EPISERVE_API_KEY" ] && [ "$EPISERVE_API_KEY" != "null" ]; then
-        export EPISERVE_API_KEY
-        echo "episerve: fetched today's API token for $EPISERVE_USERNAME" >&2
-    else
-        unset EPISERVE_API_KEY
-        echo "episerve: could not fetch an API token (writes to the platform will fail)" >&2
-    fi
-fi
+fetch_episerve_token
 
 # stdin explicitly closed: -p/--print is documented as non-interactive
 # ("process prompt and exit"), so pi should never need stdin -- but nothing
