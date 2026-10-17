@@ -24,6 +24,14 @@ A plain `docker build -t pi-agent .` reuses cached layers, so it can keep an old
 (the two CLI binaries from `releases/latest` and the skills from `episerve_skills`). The installed
 CLI versions are listed in `/opt/cli-versions.txt` and the skills commit in `/opt/skills/.episerve_skills_ref`.
 
+## `pi` inside the container
+
+Typing `pi "<prompt>"` in the container does not start the interactive harness: `pi-wrapper.sh` (installed as
+`/usr/local/sbin/pi`, ahead of the real binary in PATH) hands the prompt to `pi-agent-task.sh`, so a hand-started run
+is the same as a Prefect run (all skills, today's EPISERVE API token, the same delivery rules). `--provider` and
+`--model` are accepted; they default to `LLM_PROVIDER_NAME` / `LLM_MODEL`, then `zib` / `zib/konrad-1`. `RAW=1`
+shows the unfiltered event stream. The real binary stays at `/usr/local/bin/pi` (`PI_BIN`).
+
 ## Run locally
 
 ```bash

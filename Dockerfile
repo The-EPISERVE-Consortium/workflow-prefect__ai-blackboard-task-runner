@@ -141,7 +141,11 @@ COPY vendor/pi-config/AGENTS.md /root/.pi/agent/AGENTS.md
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY pi-agent-task.sh /usr/local/bin/pi-agent-task.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/pi-agent-task.sh
+COPY pretty.py /opt/pretty.py
+# `pi` typed in the container runs pi-agent-task.sh (see pi-wrapper.sh); /usr/local/sbin precedes the real
+# binary in /usr/local/bin in PATH.
+COPY pi-wrapper.sh /usr/local/sbin/pi
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/pi-agent-task.sh /usr/local/sbin/pi
 
 WORKDIR /workspace
 

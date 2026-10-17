@@ -77,7 +77,8 @@ fi
 # `docker run`), and pi reads stdin for any reason despite -p, it hangs
 # forever waiting for input/EOF that never arrives -- with no network
 # activity and no error, indistinguishable from progress from the outside.
-pi --provider "$PROVIDER" --model "$MODEL" \
+# The real binary by its full path: `pi` on PATH is the wrapper (pi-wrapper.sh), which calls this script.
+"${PI_BIN:-/usr/local/bin/pi}" --provider "$PROVIDER" --model "$MODEL" \
    "${SKILL_FLAGS[@]}" \
    --mode json -p "$FULL_PROMPT" < /dev/null
 
