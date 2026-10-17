@@ -21,7 +21,8 @@ ARGS=("$@")
 # The real pi, with every skill registered (descriptions up front, bodies read on demand) and today's API token.
 interactive() {
     local flags=() dir
-    case " ${ARGS[*]} " in *" --no-skills "*|*" -ns "*) ;; *)
+    # No skills of its own if the caller chose them (--skill ...) or switched them off (--no-skills)
+    case " ${ARGS[*]} " in *" --no-skills "*|*" -ns "*|*" --skill "*) ;; *)
         collect_skill_dirs
         for dir in "${SKILL_DIRS[@]}"; do flags+=(--skill "$dir"); done ;;
     esac

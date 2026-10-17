@@ -57,11 +57,15 @@ def test_without_a_prompt_or_with_another_option_the_real_pi_starts_with_the_ski
         assert called is None
         got = (tmp_path / "real").read_text()
         assert got.startswith("real:") and got.endswith(tail)
+        if "--skill" in args:
+            assert got == "real:" + tail
+            continue
         assert f"--skill|{tmp_path}/skills/alpha|--skill|{tmp_path}/skills/zeta|" in got
         assert got.index("harness-conventions") < got.index("alpha") < got.index("zeta")
-    (tmp_path / "real").unlink()
-    _run(tmp_path, "--no-skills", env={"PI_BIN": str(real)})
-    assert (tmp_path / "real").read_text() == "real:--no-skills|"
+    for args in (("--no-skills",), ("--provider", "zib", "--skill", "/opt/skills")):
+        (tmp_path / "real").unlink()
+        _run(tmp_path, *args, env={"PI_BIN": str(real)})
+        assert (tmp_path / "real").read_text() == "real:" + "".join(f"{a}|" for a in args)
 
 
 def test_interactive_pi_gets_todays_api_token(tmp_path):
