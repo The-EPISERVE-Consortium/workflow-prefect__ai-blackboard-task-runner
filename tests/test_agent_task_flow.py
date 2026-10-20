@@ -28,10 +28,10 @@ def mock_logger():
 def test_agent_task_pipeline_calls_pi_agent_task_with_args():
     with patch("flow.agent_task_flow.subprocess.Popen") as mock_popen:
         mock_popen.return_value = FakeProcess([])
-        agent_task_pipeline.fn(prompt="Clone X", provider="zib", model="zib/konrad-1.1")
+        agent_task_pipeline.fn(prompt="Clone X", provider="zib", model="zib/konrad-1x")
 
     mock_popen.assert_called_once_with(
-        ["pi-agent-task.sh", "zib", "zib/konrad-1.1", "Clone X"],
+        ["pi-agent-task.sh", "zib", "zib/konrad-1x", "Clone X"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -45,7 +45,7 @@ def test_agent_task_pipeline_uses_default_provider_and_model():
         agent_task_pipeline.fn(prompt="Clone X")
 
     args = mock_popen.call_args.args[0]
-    assert args[1:3] == ["zib", "zib/konrad-1.1"]
+    assert args[1:3] == ["zib", "zib/konrad-1x"]
 
 
 def test_agent_task_pipeline_streams_formatted_lines(mock_logger):

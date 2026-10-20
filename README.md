@@ -30,7 +30,7 @@ CLI versions are listed in `/opt/cli-versions.txt` and the skills commit in `/op
 Typing `pi "<prompt>"` instead runs the task through `pi-agent-task.sh`: `pi-wrapper.sh` (installed as
 `/usr/local/sbin/pi`, ahead of the real binary in PATH) hands the prompt over, so a hand-started run is the same as
 a Prefect run (all skills, today's EPISERVE API token, the same delivery rules). `--provider` and `--model` are
-accepted there; they default to `LLM_PROVIDER_NAME` / `LLM_MODEL`, then `zib` / `zib/konrad-1.1`. `RAW=1` shows the
+accepted there; they default to `LLM_PROVIDER_NAME` / `LLM_MODEL`, then `zib` / `zib/konrad-1x`. `RAW=1` shows the
 unfiltered event stream. The real binary stays at `/usr/local/bin/pi` (`PI_BIN`).
 
 ## Run locally

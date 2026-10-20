@@ -28,7 +28,7 @@
 #             ollama.zib.de's OpenAI-compat facade, this one has no known
 #             num_ctx truncation issue, so the generic "custom" provider path
 #             is used directly rather than a native workaround.
-#             Model via ZIB_MODEL (default zib/konrad-1.1).
+#             Model via ZIB_MODEL (default zib/konrad-1x).
 #
 # Console output is filtered through pretty.py, which merges streaming
 # thinking/text deltas into one line per block instead of a flood of
@@ -70,7 +70,7 @@ case "$LLM_PROVIDER" in
     ENV_ARGS=(-e LLM_PROVIDER=openrouter -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY")
     ;;
   zib)
-    MODEL="${ZIB_MODEL:-zib/konrad-1.1}"
+    MODEL="${ZIB_MODEL:-zib/konrad-1x}"
     : "${ZIB_API_KEY:?Set ZIB_API_KEY}"
     ENV_ARGS=(-e LLM_PROVIDER=zib -e ZIB_API_KEY="$ZIB_API_KEY" -e LLM_MODEL="$MODEL")
     ;;

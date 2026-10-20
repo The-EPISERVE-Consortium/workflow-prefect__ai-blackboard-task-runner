@@ -6,14 +6,14 @@
 # PATH; pi-agent-task.sh calls the real one by its full path.
 #
 # Provider and model default to $PI_PROVIDER / $PI_MODEL, then $LLM_PROVIDER_NAME / $LLM_MODEL (first entry of a
-# comma-separated list), then zib / zib/konrad-1. RAW=1 shows pi's unfiltered event stream.
+# comma-separated list), then zib / zib/konrad-1x. RAW=1 shows pi's unfiltered event stream.
 set -euo pipefail
 
 . "${PI_COMMON:-/usr/local/lib/pi-common.sh}"
 
 REAL_PI="${PI_BIN:-/usr/local/bin/pi}"
 PROVIDER="${PI_PROVIDER:-${LLM_PROVIDER_NAME:-zib}}"
-MODEL="${PI_MODEL:-${LLM_MODEL:-zib/konrad-1.1}}"
+MODEL="${PI_MODEL:-${LLM_MODEL:-zib/konrad-1x}}"
 MODEL="${MODEL%%,*}"
 PROMPT=()
 ARGS=("$@")
