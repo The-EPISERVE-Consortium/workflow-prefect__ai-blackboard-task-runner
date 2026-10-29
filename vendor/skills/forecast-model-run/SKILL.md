@@ -87,6 +87,8 @@ Known models:
 - `model__prediction__generic__timesfm` -- `history_length` (req),
   `prediction_length` (req, max 512), `prediction_offset` (opt, default 0);
   values must be integers
+- `model__prediction__generic__chronos2-small` -- same keys as timesfm, but
+  `prediction_length` max 1024; columns after the second are used as context
 - `model__prediction__grippeweb__baseline-nullmodel` -- `horizon_weeks`
   (default 4), `n_reference_weeks` (default 4)
 
