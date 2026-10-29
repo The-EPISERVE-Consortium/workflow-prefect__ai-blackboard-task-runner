@@ -83,6 +83,15 @@ error). Optional keys take their `default`. `parameters.rules` lists
 constraints between parameters and the data. `inputs` says which columns the
 model expects in its input file.
 
+Then let the API check it -- this starts nothing:
+
+```bash
+episerve check-config <model name or QID> '{"history_length": 512, "prediction_length": 182}'
+```
+
+Fix every entry in `problems` and repeat until `valid` is `true` (exit code
+0); only then trigger. `valid: null` means the card declares no parameters.
+
 Known models:
 - `model__prediction__generic__timesfm` -- `history_length` (req),
   `prediction_length` (req, max 512), `prediction_offset` (opt, default 0);
