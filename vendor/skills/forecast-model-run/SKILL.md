@@ -69,16 +69,19 @@ episerve list models
 ```
 
 Each entry has `docker_image` (the full `ghcr.io/the-episerve-consortium/
-model__...` string -> `model_image`), `docker_tag` (-> `model_tag`), and
-`git_repo`. Take these from the prompt or this list -- never invent an
-image name.
+model__...` string -> `model_image`), `docker_tag` (-> `model_tag`),
+`git_repo`, and the sections of the model's model card. Take these from the
+prompt or this list -- never invent an image name.
 
 **Config keys are model-specific -- never guess them.** The source of truth
-is the model repo (`git_repo`)'s `fdo.json`: `additionalProperty` lists each
-parameter with `name`, `valueRequired`, `minValue`/`maxValue`, and `value`
-(the default). Before triggering, check your `config` object has every
-`valueRequired` key and that values sit within the declared bounds. The
-model's `README.md` and the platform notes render the same table.
+is the model card (`fdo.json` in `git_repo`), shown as `parameters` in the
+list: a JSON Schema of the config. Before triggering, check your `config`
+object has every key in `parameters.required`, that each value has its
+`type` and sits within `minimum`/`maximum`, and that it has no key outside
+`parameters.properties` (with `additionalProperties: false` that is an
+error). Optional keys take their `default`. `parameters.rules` lists
+constraints between parameters and the data. `inputs` says which columns the
+model expects in its input file.
 
 Known models:
 - `model__prediction__generic__timesfm` -- `history_length` (req),
